@@ -165,6 +165,15 @@ NONX86=1
 NOHW=1
 endif
 
+ifdef SWITCH
+#NONET=1
+NOASM=1
+#NOIPX=1
+NONX86=1
+NOHW=1
+NOPOSTPROCESSING=1
+endif
+
 ifdef DJGPPDOS
 include djgppdos/Makefile.cfg
 endif

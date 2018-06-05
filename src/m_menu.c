@@ -2114,6 +2114,25 @@ boolean M_Responder(event_t *ev)
 			case KEY_HAT1 + 3:
 				ch = KEY_RIGHTARROW;
 				break;
+#ifdef __SWITCH__
+			// FIXME
+
+			case KEY_JOY1 + 11:
+				ch = KEY_ESCAPE;
+				break;
+			case KEY_JOY1 + 13:
+				ch = KEY_UPARROW;
+				break;
+			case KEY_JOY1 + 15:
+				ch = KEY_DOWNARROW;
+				break;
+			case KEY_JOY1 + 12:
+				ch = KEY_LEFTARROW;
+				break;
+			case KEY_JOY1 + 14:
+				ch = KEY_RIGHTARROW;
+				break;
+#endif
 		}
 	}
 	else if (menuactive)

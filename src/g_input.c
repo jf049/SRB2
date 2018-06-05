@@ -270,7 +270,7 @@ static keyname_t keynames[] =
 	{KEY_MOUSE1+0,"MOUSE1"},
 	{KEY_MOUSE1+1,"MOUSE2"},
 	{KEY_MOUSE1+2,"MOUSE3"},
-#if !defined (_arch_dreamcast) && !defined (_XBOX) && !defined (_PSP) && !defined (_WII)
+#if !defined (_arch_dreamcast) && !defined (_XBOX) && !defined (_PSP) && !defined (_WII) && !defined (__SWITCH__)
 	{KEY_MOUSE1+3,"MOUSE4"},
 	{KEY_MOUSE1+4,"MOUSE5"},
 	{KEY_MOUSE1+5,"MOUSE6"},
@@ -280,7 +280,7 @@ static keyname_t keynames[] =
 	{KEY_2MOUSE1+0,"SEC_MOUSE2"}, // BP: sorry my mouse handler swap button 1 and 2
 	{KEY_2MOUSE1+1,"SEC_MOUSE1"},
 	{KEY_2MOUSE1+2,"SEC_MOUSE3"},
-#if !defined (_arch_dreamcast) && !defined (_XBOX) && !defined (_PSP) && !defined (_WII)
+#if !defined (_arch_dreamcast) && !defined (_XBOX) && !defined (_PSP) && !defined (_WII) && !defined (__SWITCH__)
 	{KEY_2MOUSE1+3,"SEC_MOUSE4"},
 	{KEY_2MOUSE1+4,"SEC_MOUSE5"},
 	{KEY_2MOUSE1+5,"SEC_MOUSE6"},
@@ -403,6 +403,24 @@ static keyname_t keynames[] =
 	{KEY_JOY1+18, "JOYHPLUS_CC"},
 	{KEY_JOY1+19, "JOYMHOME_CC"},
 #define NOMOREJOYBTN_1S
+#elif defined (__SWITCH__)
+	{KEY_JOY1+0,  "JOYA"},
+	{KEY_JOY1+1,  "JOYB"},
+	{KEY_JOY1+2,  "JOYX"},
+	{KEY_JOY1+3,  "JOYY"},
+	{KEY_JOY1+4,  "JOYSTICKL"},
+	{KEY_JOY1+5,  "JOYSTICKR"},
+	{KEY_JOY1+6,  "JOYL"},
+	{KEY_JOY1+7,  "JOYR"},
+	{KEY_JOY1+8,  "JOYZL"},
+	{KEY_JOY1+9,  "JOYZR"},
+	{KEY_JOY1+10, "JOYPLUS"},
+	{KEY_JOY1+11, "JOYMINUS"},
+	{KEY_JOY1+12, "JOYLEFT"},
+	{KEY_JOY1+13, "JOYUP"},
+	{KEY_JOY1+14, "JOYRIGHT"},
+	{KEY_JOY1+15, "JOYDOWN"},
+#define NOMOREJOYBTN_1S
 #else
 	{KEY_JOY1+0, "JOY1"},
 	{KEY_JOY1+1, "JOY2"},
@@ -445,7 +463,7 @@ static keyname_t keynames[] =
 	{KEY_HAT1+1, "HATDOWN"},
 	{KEY_HAT1+2, "HATLEFT"},
 	{KEY_HAT1+3, "HATRIGHT"},
-#if !defined (_XBOX) && !defined (_PSP) && !defined (_WII)
+#if !defined (_XBOX) && !defined (_PSP) && !defined (_WII) && !defined (__SWITCH__)
 	{KEY_HAT1+4, "HATUP2"},
 	{KEY_HAT1+5, "HATDOWN2"},
 	{KEY_HAT1+6, "HATLEFT2"},
@@ -465,7 +483,7 @@ static keyname_t keynames[] =
 	{KEY_DBLMOUSE1+0, "DBLMOUSE1"},
 	{KEY_DBLMOUSE1+1, "DBLMOUSE2"},
 	{KEY_DBLMOUSE1+2, "DBLMOUSE3"},
-#if !defined (_arch_dreamcast) && !defined (_XBOX) && !defined (_PSP) && !defined (_WII)
+#if !defined (_arch_dreamcast) && !defined (_XBOX) && !defined (_PSP) && !defined (_WII) && !defined (__SWITCH__)
 	{KEY_DBLMOUSE1+3, "DBLMOUSE4"},
 	{KEY_DBLMOUSE1+4, "DBLMOUSE5"},
 	{KEY_DBLMOUSE1+5, "DBLMOUSE6"},
@@ -475,7 +493,7 @@ static keyname_t keynames[] =
 	{KEY_DBL2MOUSE1+0, "DBLSEC_MOUSE2"}, // BP: sorry my mouse handler swap button 1 and 2
 	{KEY_DBL2MOUSE1+1, "DBLSEC_MOUSE1"},
 	{KEY_DBL2MOUSE1+2, "DBLSEC_MOUSE3"},
-#if !defined (_arch_dreamcast) && !defined (_XBOX) && !defined (_PSP) && !defined (_WII)
+#if !defined (_arch_dreamcast) && !defined (_XBOX) && !defined (_PSP) && !defined (_WII) && !defined (__SWITCH__)
 	{KEY_DBL2MOUSE1+3, "DBLSEC_MOUSE4"},
 	{KEY_DBL2MOUSE1+4, "DBLSEC_MOUSE5"},
 	{KEY_DBL2MOUSE1+5, "DBLSEC_MOUSE6"},
@@ -594,6 +612,24 @@ static keyname_t keynames[] =
 	{KEY_DBLJOY1+18, "DBLJOYHPLUS_CC"},
 	{KEY_DBLJOY1+19, "DBLJOYMHOME_CC"},
 #define NOMOREJOYBTN_1DBL
+#elif defined (__SWITCH__)
+	{KEY_DBLJOY1+0,  "DBLJOYA"},
+	{KEY_DBLJOY1+1,  "DBLJOYB"},
+	{KEY_DBLJOY1+2,  "DBLJOYX"},
+	{KEY_DBLJOY1+3,  "DBLJOYY"},
+	{KEY_DBLJOY1+4,  "DBLJOYSTICKL"},
+	{KEY_DBLJOY1+5,  "DBLJOYSTICKR"},
+	{KEY_DBLJOY1+6,  "DBLJOYL"},
+	{KEY_DBLJOY1+7,  "DBLJOYR"},
+	{KEY_DBLJOY1+8,  "DBLJOYZL"},
+	{KEY_DBLJOY1+9,  "DBLJOYZR"},
+	{KEY_DBLJOY1+10, "DBLJOYPLUS"},
+	{KEY_DBLJOY1+11, "DBLJOYMINUS"},
+	{KEY_DBLJOY1+12, "DBLJOYLEFT"},
+	{KEY_DBLJOY1+13, "DBLJOYUP"},
+	{KEY_DBLJOY1+14, "DBLJOYRIGHT"},
+	{KEY_DBLJOY1+15, "DBLJOYDOWN"},
+#define NOMOREJOYBTN_1DBL
 #else
 	{KEY_DBLJOY1+0, "DBLJOY1"},
 	{KEY_DBLJOY1+1, "DBLJOY2"},
@@ -634,7 +670,7 @@ static keyname_t keynames[] =
 	{KEY_DBLHAT1+1, "DBLHATDOWN"},
 	{KEY_DBLHAT1+2, "DBLHATLEFT"},
 	{KEY_DBLHAT1+3, "DBLHATRIGHT"},
-#if !defined (_XBOX) && !defined (_PSP) && !defined (_WII)
+#if !defined (_XBOX) && !defined (_PSP) && !defined (_WII) && !defined (__SWITCH__)
 	{KEY_DBLHAT1+4, "DBLHATUP2"},
 	{KEY_DBLHAT1+5, "DBLHATDOWN2"},
 	{KEY_DBLHAT1+6, "DBLHATLEFT2"},
@@ -784,7 +820,7 @@ static keyname_t keynames[] =
 	{KEY_2HAT1+1,  "SEC_HATDOWN"},
 	{KEY_2HAT1+2,  "SEC_HATLEFT"},
 	{KEY_2HAT1+3,  "SEC_HATRIGHT"},
-#if !defined (_XBOX) && !defined (_PSP) && !defined (_WII)
+#if !defined (_XBOX) && !defined (_PSP) && !defined (_WII) && !defined (__SWITCH__)
 	{KEY_2HAT1+4, "SEC_HATUP2"},
 	{KEY_2HAT1+5, "SEC_HATDOWN2"},
 	{KEY_2HAT1+6, "SEC_HATLEFT2"},
@@ -932,7 +968,7 @@ static keyname_t keynames[] =
 	{KEY_DBL2HAT1+1, "DBLSEC_HATDOWN"},
 	{KEY_DBL2HAT1+2, "DBLSEC_HATLEFT"},
 	{KEY_DBL2HAT1+3, "DBLSEC_HATRIGHT"},
-#if !defined (_XBOX) && !defined (_PSP) && !defined (_WII)
+#if !defined (_XBOX) && !defined (_PSP) && !defined (_WII) && !defined (__SWITCH__)
 	{KEY_DBL2HAT1+4, "DBLSEC_HATUP2"},
 	{KEY_DBL2HAT1+5, "DBLSEC_HATDOWN2"},
 	{KEY_DBL2HAT1+6, "DBLSEC_HATLEFT2"},
@@ -1264,6 +1300,23 @@ void G_Controldefault(void)
 	gamecontrolbis[gc_jump       ][1] = KEY_2JOY1+3;  //2
 	gamecontrolbis[gc_pause      ][0] = KEY_2JOY1+06; //Home
 	gamecontrolbis[gc_pause      ][1] = KEY_2JOY1+19; //Home
+#endif
+#ifdef __SWITCH__
+	gamecontrol[gc_forward    ][1] = KEY_JOY1+13; //UP
+	gamecontrol[gc_backward   ][1] = KEY_JOY1+15; //DOWN
+	gamecontrol[gc_straferight][1] = KEY_JOY1+9;  //ZR
+	gamecontrol[gc_strafeleft ][1] = KEY_JOY1+8;  //ZL
+	gamecontrol[gc_turnleft   ][1] = KEY_JOY1+12; //LEFT
+	gamecontrol[gc_turnright  ][1] = KEY_JOY1+14; //RIGHT
+	gamecontrol[gc_weaponnext ][1] = KEY_JOY1+2;  //X
+	gamecontrol[gc_fire       ][0] = KEY_JOY1+3;  //Y
+	gamecontrol[gc_firenormal ][0] = KEY_JOY1+6;  //L
+	gamecontrol[gc_firenormal ][1] = KEY_JOY1+0;  //A
+	gamecontrol[gc_use        ][0] = KEY_JOY1+1;  //B
+	gamecontrol[gc_centerview ][1] = KEY_JOY1+5;  //stick R
+	//gamecontrol[gc_scores     ][0] = KEY_JOY1+11; //Minus
+	gamecontrol[gc_jump       ][0] = KEY_JOY1+7;  //R
+	gamecontrol[gc_pause      ][0] = KEY_JOY1+10; //Plus
 #endif
 }
 #endif

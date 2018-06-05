@@ -1416,6 +1416,11 @@ void I_StartupGraphics(void)
 	usesdl2soft = M_CheckParm("-softblit");
 	borderlesswindow = M_CheckParm("-borderless");
 
+#ifdef __SWITCH__
+	// FIXME
+	usesdl2soft = SDL_TRUE;
+#endif
+
 	//SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY>>1,SDL_DEFAULT_REPEAT_INTERVAL<<2);
 	VID_Command_ModeList_f();
 #ifdef HWRENDER
