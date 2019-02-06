@@ -137,27 +137,53 @@ static SDL_bool      havefocus = SDL_TRUE;
 static const char *fallback_resolution_name = "Fallback";
 
 // windowed video modes from which to choose from.
-static INT32 windowedModes[MAXWINMODES][2] =
-{
-	{1920,1200}, // 1.60,6.00
-	{1920,1080}, // 1.66
-	{1680,1050}, // 1.60,5.25
-	{1600,1200}, // 1.33
-	{1600, 900}, // 1.66
-	{1366, 768}, // 1.66
-	{1440, 900}, // 1.60,4.50
-	{1280,1024}, // 1.33?
-	{1280, 960}, // 1.33,4.00
-	{1280, 800}, // 1.60,4.00
-	{1280, 720}, // 1.66
-	{1152, 864}, // 1.33,3.60
-	{1024, 768}, // 1.33,3.20
-	{ 800, 600}, // 1.33,2.50
-	{ 640, 480}, // 1.33,2.00
-	{ 640, 400}, // 1.60,2.00
-	{ 320, 240}, // 1.33,1.00
-	{ 320, 200}, // 1.60,1.00
-};
+#ifdef __SWITCH__
+	static INT32 windowedModes[MAXWINMODES][2] =
+	{
+		{1920,1080}, // 1.66
+		{1680, 945}, 
+		{1600, 900}, // 1.66
+		{1366, 768}, // 1.66
+		{1440, 810}, 
+		{1280, 720}, // 1.66
+		{1152, 864}, // 1.33,3.60
+		{1152, 648},
+		{1024, 768}, // 1.33,3.20
+		{1024, 576}, 
+		{ 800, 600}, // 1.33,2.50
+		{ 800, 450}, 
+		{ 640, 480}, // 1.33,2.00
+		{ 640, 400}, // 1.60,2.00
+		{ 640, 360},
+		{ 320, 240}, // 1.33,1.00
+		{ 320, 200}, // 1.60,1.00
+		{ 320, 180},
+	};
+#else
+
+
+	static INT32 windowedModes[MAXWINMODES][2] =
+	{
+		{1920,1200}, // 1.60,6.00
+		{1920,1080}, // 1.66
+		{1680,1050}, // 1.60,5.25
+		{1600,1200}, // 1.33
+		{1600, 900}, // 1.66
+		{1366, 768}, // 1.66
+		{1440, 900}, // 1.60,4.50
+		{1280,1024}, // 1.33?
+		{1280, 960}, // 1.33,4.00
+		{1280, 800}, // 1.60,4.00
+		{1280, 720}, // 1.66
+		{1152, 864}, // 1.33,3.60
+		{1024, 768}, // 1.33,3.20
+		{ 800, 600}, // 1.33,2.50
+		{ 640, 480}, // 1.33,2.00
+		{ 640, 400}, // 1.60,2.00
+		{ 320, 240}, // 1.33,1.00
+		{ 320, 200}, // 1.60,1.00
+	};
+#endif
 
 static void Impl_VideoSetupSDLBuffer(void);
 static void Impl_VideoSetupBuffer(void);
@@ -193,7 +219,11 @@ static void SDLSetMode(INT32 width, INT32 height, SDL_bool fullscreen)
 				SDL_SetWindowFullscreen(window, 0);
 			}
 			// Reposition window only in windowed mode
-			SDL_SetWindowSize(window, width, height);
+			#ifdef __SWITCH__
+				SDL_SetWindowSize(window, 1920, 1080);
+			#else
+				SDL_SetWindowSize(window, width, height);
+			#endif
 			SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 		}
 	}
@@ -1196,29 +1226,29 @@ INT32 VID_SetMode(INT32 modeNum)
 	vid.recalc = 1;
 	vid.bpp = 1;
 
-	if (modeNum >= 0 && modeNum < MAXWINMODES)
-	{
-		vid.width = windowedModes[modeNum][0];
-		vid.height = windowedModes[modeNum][1];
-		vid.modenum = modeNum;
-	}
-	else
-	{
-		// just set the desktop resolution as a fallback
-		SDL_DisplayMode mode;
-		SDL_GetWindowDisplayMode(window, &mode);
-		if (mode.w >= 2048)
+		if (modeNum >= 0 && modeNum < MAXWINMODES)
 		{
-			vid.width = 1920;
-			vid.height = 1200;
+			vid.width = windowedModes[modeNum][0];
+			vid.height = windowedModes[modeNum][1];
+			vid.modenum = modeNum;
 		}
 		else
 		{
-			vid.width = mode.w;
-			vid.height = mode.h;
+			// just set the desktop resolution as a fallback
+			SDL_DisplayMode mode;
+			SDL_GetWindowDisplayMode(window, &mode);
+			if (mode.w >= 2048)
+			{
+				vid.width = 1920;
+				vid.height = 1200;
+			}
+			else
+			{
+				vid.width = mode.w;
+				vid.height = mode.h;
+			}
+			vid.modenum = -1;
 		}
-		vid.modenum = -1;
-	}
 	//Impl_SetWindowName("SRB2 "VERSIONSTRING);
 
 	SDLSetMode(vid.width, vid.height, USE_FULLSCREEN);
@@ -1289,6 +1319,10 @@ static SDL_bool Impl_CreateWindow(SDL_bool fullscreen)
 			flags |= SDL_RENDERER_SOFTWARE;
 		else if (cv_vidwait.value)
 			flags |= SDL_RENDERER_PRESENTVSYNC;
+
+		#ifdef __SWITCH__
+			flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
+		#endif
 
 		renderer = SDL_CreateRenderer(window, -1, flags);
 		if (renderer == NULL)
@@ -1415,11 +1449,6 @@ void I_StartupGraphics(void)
 
 	usesdl2soft = M_CheckParm("-softblit");
 	borderlesswindow = M_CheckParm("-borderless");
-
-#ifdef __SWITCH__
-	// FIXME
-	usesdl2soft = SDL_TRUE;
-#endif
 
 	//SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY>>1,SDL_DEFAULT_REPEAT_INTERVAL<<2);
 	VID_Command_ModeList_f();
