@@ -179,7 +179,7 @@ NOHW=1
 endif
 
 ifdef SWITCH
-#NONET=1
+# NONET=1
 NOASM=1
 NONX86=1
 NOHW=1

@@ -1205,6 +1205,50 @@ void G_Controldefault(void)
 	gamecontrol[gc_pause      ][0] = KEY_JOY1+6; //Start
 	gamecontrol[gc_weaponnext ][0] = KEY_JOY1+7; //Select
 }
+#elif defined (__SWITCH__)
+void G_Controldefault(void)
+{
+	gamecontrol[gc_jump       ][0] = KEY_JOY1+1;  //B
+	gamecontrol[gc_jump       ][1] = KEY_JOY1+7;  //R
+	gamecontrol[gc_use        ][0] = KEY_JOY1+3;  //Y
+	gamecontrol[gc_use        ][1] = KEY_JOY1+6;  //L
+
+	gamecontrol[gc_turnright  ][0] = KEY_JOY1+9;  //ZR
+	gamecontrol[gc_turnleft   ][0] = KEY_JOY1+8;  //ZL
+	gamecontrol[gc_centerview ][0] = KEY_JOY1+5;  //stick R
+
+	gamecontrol[gc_scores     ][0] = KEY_JOY1+13; //UP
+	gamecontrol[gc_tossflag   ][0] = KEY_JOY1+15; //DOWN
+	gamecontrol[gc_weaponprev ][0] = KEY_JOY1+12; //LEFT
+	gamecontrol[gc_weaponnext ][0] = KEY_JOY1+14; //RIGHT
+
+	gamecontrol[gc_fire       ][0] = KEY_JOY1+2;  //X
+	gamecontrol[gc_firenormal ][0] = KEY_JOY1+0;  //A
+
+	gamecontrol[gc_pause      ][0] = KEY_JOY1+10; //Plus
+	gamecontrol[gc_systemmenu ][0] = KEY_JOY1+11; //Minus
+
+
+	gamecontrolbis[gc_jump       ][0] = KEY_2JOY1+1;  //B
+	gamecontrolbis[gc_jump       ][1] = KEY_2JOY1+7;  //R
+	gamecontrolbis[gc_use        ][0] = KEY_2JOY1+3;  //Y
+	gamecontrolbis[gc_use        ][1] = KEY_2JOY1+6;  //L
+
+	gamecontrolbis[gc_turnright  ][0] = KEY_2JOY1+9;  //ZR
+	gamecontrolbis[gc_turnleft   ][0] = KEY_2JOY1+8;  //ZL
+	gamecontrolbis[gc_centerview ][0] = KEY_2JOY1+5;  //stick R
+
+	gamecontrolbis[gc_scores     ][0] = KEY_2JOY1+13; //UP
+	gamecontrolbis[gc_tossflag   ][0] = KEY_2JOY1+15; //DOWN
+	gamecontrolbis[gc_weaponprev ][0] = KEY_2JOY1+12; //LEFT
+	gamecontrolbis[gc_weaponnext ][0] = KEY_2JOY1+14; //RIGHT
+
+	gamecontrolbis[gc_fire       ][0] = KEY_2JOY1+2;  //X
+	gamecontrolbis[gc_firenormal ][0] = KEY_2JOY1+0;  //A
+
+	gamecontrolbis[gc_systemmenu ][0] = KEY_2JOY1+10; //Plus
+	gamecontrolbis[gc_pause      ][0] = KEY_2JOY1+11; //Minus
+}
 #else
 void G_Controldefault(void)
 {
@@ -1344,23 +1388,6 @@ void G_Controldefault(void)
 	gamecontrolbis[gc_jump       ][1] = KEY_2JOY1+3;  //2
 	gamecontrolbis[gc_pause      ][0] = KEY_2JOY1+06; //Home
 	gamecontrolbis[gc_pause      ][1] = KEY_2JOY1+19; //Home
-#endif
-#ifdef __SWITCH__
-	gamecontrol[gc_forward    ][1] = KEY_JOY1+13; //UP
-	gamecontrol[gc_backward   ][1] = KEY_JOY1+15; //DOWN
-	gamecontrol[gc_straferight][1] = KEY_JOY1+9;  //ZR
-	gamecontrol[gc_strafeleft ][1] = KEY_JOY1+8;  //ZL
-	gamecontrol[gc_turnleft   ][1] = KEY_JOY1+12; //LEFT
-	gamecontrol[gc_turnright  ][1] = KEY_JOY1+14; //RIGHT
-	gamecontrol[gc_weaponnext ][1] = KEY_JOY1+2;  //X
-	gamecontrol[gc_fire       ][0] = KEY_JOY1+3;  //Y
-	gamecontrol[gc_firenormal ][0] = KEY_JOY1+6;  //L
-	gamecontrol[gc_firenormal ][1] = KEY_JOY1+0;  //A
-	gamecontrol[gc_use        ][0] = KEY_JOY1+1;  //B
-	gamecontrol[gc_centerview ][1] = KEY_JOY1+5;  //stick R
-	//gamecontrol[gc_scores     ][0] = KEY_JOY1+11; //Minus
-	gamecontrol[gc_jump       ][0] = KEY_JOY1+7;  //R
-	gamecontrol[gc_pause      ][0] = KEY_JOY1+10; //Plus
 #endif
 }
 #endif

@@ -458,7 +458,9 @@ static menuitem_t MainMenu[] =
 	{IT_CALL   |IT_STRING, NULL, "1  player",   M_SinglePlayerMenu, 84},
 	{IT_SUBMENU|IT_STRING, NULL, "multiplayer", &MP_MainDef,        92},
 	{IT_CALL   |IT_STRING, NULL, "options",     M_Options,         100},
+#ifndef __SWITCH__ // FIXME
 	{IT_CALL   |IT_STRING, NULL, "Addons",      M_Addons,          108},
+#endif
 	{IT_CALL   |IT_STRING, NULL, "quit  game",  M_QuitSRB2,        116},
 };
 
@@ -1185,7 +1187,7 @@ static menuitem_t OP_VideoOptionsMenu[] =
 	{IT_SUBMENU|IT_STRING, NULL,   "3D Card Options...",  &OP_OpenGLOptionsDef,    20},
 #endif
 
-#if (defined (__unix__) && !defined (MSDOS)) || defined (UNIXCOMMON) || defined (HAVE_SDL)
+#if ((defined (__unix__) && !defined (MSDOS)) || defined (UNIXCOMMON) || defined (HAVE_SDL)) && !defined(__SWITCH__)
 	{IT_STRING|IT_CVAR,      NULL, "Fullscreen",          &cv_fullscreen,    30},
 #endif
 
@@ -1198,7 +1200,9 @@ static menuitem_t OP_VideoOptionsMenu[] =
 
 	{IT_STRING | IT_CVAR,    NULL, "Show FPS",            &cv_ticrate,    110},
 	{IT_STRING | IT_CVAR,    NULL, "Clear Before Redraw", &cv_homremoval, 120},
+	#ifndef __SWITCH__
 	{IT_STRING | IT_CVAR,    NULL, "Vertical Sync",       &cv_vidwait,    130},
+	#endif
 };
 
 static menuitem_t OP_VideoModeMenu[] =
@@ -2210,8 +2214,6 @@ boolean M_Responder(event_t *ev)
 					break;
 
 #ifdef __SWITCH__
-			// FIXME
-
 			case KEY_JOY1 + 11:
 				ch = KEY_ESCAPE;
 				break;
