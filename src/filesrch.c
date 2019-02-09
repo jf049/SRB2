@@ -800,7 +800,12 @@ boolean preparefilemenu(boolean samedepth)
 		I_Error("preparefilemenu(): could not reallocate coredirmenu.");
 	}
 
-	rewinddir(dirhandle);
+	closedir(dirhandle);
+	if (!(dirhandle = opendir(menupath))) // get directory
+	{
+		closefilemenu(true);
+		return false;
+	}
 
 	while ((pos+folderpos) < sizecoredirmenu)
 	{

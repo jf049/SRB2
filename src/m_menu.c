@@ -458,9 +458,7 @@ static menuitem_t MainMenu[] =
 	{IT_CALL   |IT_STRING, NULL, "1  player",   M_SinglePlayerMenu, 84},
 	{IT_SUBMENU|IT_STRING, NULL, "multiplayer", &MP_MainDef,        92},
 	{IT_CALL   |IT_STRING, NULL, "options",     M_Options,         100},
-#ifndef __SWITCH__ // FIXME
 	{IT_CALL   |IT_STRING, NULL, "Addons",      M_Addons,          108},
-#endif
 	{IT_CALL   |IT_STRING, NULL, "quit  game",  M_QuitSRB2,        116},
 };
 
@@ -4115,7 +4113,7 @@ static char *M_AddonsHeaderPath(void)
 
 static void M_AddonsClearName(INT32 choice)
 {
-	CLEARNAME;
+	if (refreshdirname) { CLEARNAME; } // BRACES ARE REQUIRED BECAUSE OF MACRO FUCKERY
 	M_StopMessage(choice);
 }
 
@@ -4153,7 +4151,7 @@ static boolean M_AddonsRefresh(void)
 		}
 
 		S_StartSound(NULL, sfx_strpst);
-		CLEARNAME;
+		if (refreshdirname) { CLEARNAME; } // BRACES ARE REQUIRED BECAUSE OF MACRO FUCKERY
 	}
 
 	return false;
