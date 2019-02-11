@@ -23,3 +23,5 @@ Switch-specific instructions will be available Soon(TM).
 
 ## Disclaimer
 Sonic Team Junior is in no way affiliated with SEGA or Sonic Team. We do not claim ownership of any of SEGA's intellectual property used in SRB2.
+
+I (heyjoeway), STJr, or the SRB2MB are in no way responsible if this port somehow manages to break your Switch.
