@@ -71,6 +71,10 @@ int	snprintf(char *str, size_t n, const char *fmt, ...);
 //int	vsnprintf(char *str, size_t n, const char *fmt, va_list ap);
 #endif
 
+#ifdef __SWITCH__
+#include "switch/swkbd.h"
+#endif
+
 #define SKULLXOFF -32
 #define LINEHEIGHT 16
 #define STRINGHEIGHT 8
@@ -2492,6 +2496,18 @@ boolean M_Responder(event_t *ev)
 		case KEY_ENTER:
 			noFurtherInput = true;
 			currentMenu->lastOn = itemOn;
+
+			#ifdef __SWITCH__
+			if ((currentMenu->menuitems[itemOn].status & IT_CVARTYPE) == IT_CV_STRING) {
+				Switch_Keyboard_GetText(
+					currentMenu->menuitems[itemOn].text,
+					((consvar_t *)currentMenu->menuitems[itemOn].itemaction)->string // Current value of cvar
+				);
+				if (strlen(swkbdResult) == 0) return true;
+				CV_Set(currentMenu->menuitems[itemOn].itemaction, swkbdResult);
+			}
+			#endif
+
 			if (routine)
 			{
 				if (((currentMenu->menuitems[itemOn].status & IT_TYPE)==IT_CALL
@@ -7001,6 +7017,12 @@ static void M_HandleConnectIP(INT32 choice)
 	switch (choice)
 	{
 		case KEY_ENTER:
+			#ifdef __SWITCH__
+			Switch_Keyboard_GetText("IPV4 Address", setupm_ip);
+			if (strlen(swkbdResult) == 0) break;
+			SDL_strlcpy(setupm_ip, swkbdResult, sizeof(setupm_ip));
+			#endif
+
 			S_StartSound(NULL,sfx_menu1); // Tails
 			M_ClearMenus(true);
 			M_ConnectIP(1);
@@ -7229,6 +7251,14 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 				setupm_name[l+1] =0;
 			}
 			break;
+		#ifdef __SWITCH__
+		case KEY_ENTER:
+			if (itemOn != 0) break;
+			Switch_Keyboard_GetText("Player Name", setupm_name);
+			if (strlen(swkbdResult) == 0) break;
+	        SDL_strlcpy(setupm_name, swkbdResult, sizeof(setupm_name));
+			break;
+		#endif
 	}
 
 	// check skin

@@ -43,6 +43,10 @@
 #include "hardware/hw_main.h"
 #endif
 
+#ifdef __SWITCH__
+#include "switch/swkbd.h"
+#endif
+
 #define MAXHUDLINES 20
 
 static boolean con_started = false; // console has been initialised
@@ -962,9 +966,20 @@ boolean CON_Responder(event_t *ev)
 	// Clear completion
 	completion[0] = 0;
 
+	#ifdef __SWITCH__
+	if (key == KEY_JOY1 + 1) //B
+		key = KEY_ENTER;
+	#endif
+
 	// command enter
 	if (key == KEY_ENTER)
 	{
+		#ifdef __SWITCH__
+		Switch_Keyboard_GetText("Console Command", inputlines[inputline]);
+		if (strlen(swkbdResult) == 0) return true;
+		CON_InputSetString(swkbdResult);
+		#endif
+
 		if (!input_len)
 			return true;
 

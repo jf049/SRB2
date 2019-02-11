@@ -575,6 +575,10 @@ void D_SRB2Loop(void)
 		V_DrawScaledPatch(0, 0, 0, (patch_t *)W_CacheLumpNum(W_GetNumForName("CONSBACK"), PU_CACHE));
 	I_FinishUpdate(); // page flip or blit buffer
 
+	#ifdef __SWITCH__
+	appletSetFocusHandlingMode(AppletFocusHandlingMode_SuspendHomeSleep);
+	#endif
+
 	for (;;)
 	{
 		if (lastwipetic)
