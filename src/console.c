@@ -967,19 +967,17 @@ boolean CON_Responder(event_t *ev)
 	completion[0] = 0;
 
 	#ifdef __SWITCH__
-	if (key == KEY_JOY1 + 1) //B
+	if (key == KEY_JOY1 + 1) { // B, leads into KEY_ENTER
+		Switch_Keyboard_GetText("Console Command", inputlines[inputline]);
+		if (strlen(swkbdResult) == 0) return true;
+		CON_InputSetString(swkbdResult);
 		key = KEY_ENTER;
+	}
 	#endif
 
 	// command enter
 	if (key == KEY_ENTER)
 	{
-		#ifdef __SWITCH__
-		Switch_Keyboard_GetText("Console Command", inputlines[inputline]);
-		if (strlen(swkbdResult) == 0) return true;
-		CON_InputSetString(swkbdResult);
-		#endif
-
 		if (!input_len)
 			return true;
 

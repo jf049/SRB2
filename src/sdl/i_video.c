@@ -336,11 +336,7 @@ static INT32 Impl_SDL_Scancode_To_Keycode(SDL_Scancode code)
 		case SDL_SCANCODE_BACKSPACE:      return KEY_BACKSPACE;
 		case SDL_SCANCODE_TAB:            return KEY_TAB;
 		case SDL_SCANCODE_SPACE:          return KEY_SPACE;
-		// heyjoeway: WEE WOO WEE WOO HACK ALERT
-		// libnx uses KEY_MINUS; name conflicts
-		#ifndef __SWITCH__
 		case SDL_SCANCODE_MINUS:          return KEY_MINUS;
-		#endif
 		case SDL_SCANCODE_EQUALS:         return KEY_EQUALS;
 		case SDL_SCANCODE_LEFTBRACKET:    return '[';
 		case SDL_SCANCODE_RIGHTBRACKET:   return ']';

@@ -23,11 +23,7 @@
 #define KEY_ENTER    13
 #define KEY_ESCAPE   27
 #define KEY_SPACE    32
-// heyjoeway: WEE WOO WEE WOO HACK ALERT
-// libnx uses KEY_MINUS; name conflicts
-#ifndef __SWITCH__
 #define KEY_MINUS    45
-#endif
 #define KEY_EQUALS   61
 
 #define KEY_NUMLOCK    (0x80+69)

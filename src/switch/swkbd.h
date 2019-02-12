@@ -1,7 +1,7 @@
 #ifndef _SWITCH_SWKBD
 #define _SWITCH_SWKBD
 
-#include <switch.h>
+#include <switch/applets/swkbd.h>
 
 // Borrowed from https://github.com/joel16/NX-Shell/ (/source/keyboard.c)
 

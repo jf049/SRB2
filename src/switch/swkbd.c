@@ -4,7 +4,8 @@
 #include "../s_sound.h"
 
 #include "swkbd.h"
-#include <switch.h>
+#include <switch/applets/swkbd.h>
+#include <switch/services/hid.h>
 
 // Empty strings are invalid.
 SwkbdTextCheckResult Switch_Keyboard_ValidateText(char *string, size_t size) {
@@ -17,12 +18,13 @@ SwkbdTextCheckResult Switch_Keyboard_ValidateText(char *string, size_t size) {
 }
 
 void Switch_Keyboard_GetText(const char *guide_text, const char *initial_text) {
-	if (!P_CanAutoPause()) {
-		S_StartSound(NULL, sfx_s3kb2); // Error sound
-		swkbdResult = "";
+	// Check if this enter press is coming from an actual keyboard
+	if (hidKeyboardHeld(KBD_ENTER)) {
+		swkbdResult = strdup(initial_text);
 		return;
 	}
 
+	// Can't bring up the software keyboard when you can't pause the game
 	Result ret = 0;
 	SwkbdConfig swkbd;
 	static char input_string[256];
