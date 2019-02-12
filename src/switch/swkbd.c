@@ -25,6 +25,12 @@ void Switch_Keyboard_GetText(const char *guide_text, const char *initial_text) {
 	}
 
 	// Can't bring up the software keyboard when you can't pause the game
+	if (!P_CanAutoPause()) {
+		S_StartSound(NULL, sfx_s3kb2); // Error sound
+		swkbdResult = "";
+		return;
+	}
+
 	Result ret = 0;
 	SwkbdConfig swkbd;
 	static char input_string[256];
