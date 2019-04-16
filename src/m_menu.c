@@ -2155,6 +2155,19 @@ static void M_PrevOpt(void)
 // (in other words -- stop bullshit happening by mashing buttons in fades)
 static boolean noFurtherInput = false;
 
+#ifdef __SWITCH__
+
+void M_Responder_Switch_SwkbdChanged(const char* str, SwkbdChangedStringArg* arg) {
+	CV_Set(currentMenu->menuitems[itemOn].itemaction, str);
+}
+
+void M_Responder_Switch_SwkbdMovedCursor(const char* str, SwkbdChangedStringArg* arg) {
+	char *currentStr = ((consvar_t *)currentMenu->menuitems[itemOn].itemaction)->string;
+	swkbdInlineSetCursorPos(&switch_kbdinline, strlen(currentStr)); // Place swkbd cursor at string end
+}
+
+#endif
+
 //
 // M_Responder
 //
@@ -2198,9 +2211,6 @@ boolean M_Responder(event_t *ev)
 				case KEY_MOUSE1 + 1:
 				case KEY_JOY1 + 1:
 					ch = KEY_ESCAPE;
-					break;
-				case KEY_JOY1 + 2:
-					ch = KEY_BACKSPACE;
 					break;
 				case KEY_HAT1:
 					ch = KEY_UPARROW;
@@ -2499,12 +2509,18 @@ boolean M_Responder(event_t *ev)
 
 			#ifdef __SWITCH__
 			if ((currentMenu->menuitems[itemOn].status & IT_CVARTYPE) == IT_CV_STRING) {
-				Switch_Keyboard_GetText(
-					currentMenu->menuitems[itemOn].text,
-					((consvar_t *)currentMenu->menuitems[itemOn].itemaction)->string // Current value of cvar
+				char *currentStr = ((consvar_t *)currentMenu->menuitems[itemOn].itemaction)->string;
+				swkbdInlineSetChangedStringCallback(&switch_kbdinline, M_Responder_Switch_SwkbdChanged);
+				swkbdInlineSetMovedCursorCallback(&switch_kbdinline, M_Responder_Switch_SwkbdMovedCursor);
+				swkbdInlineSetDecidedEnterCallback(&switch_kbdinline, NULL); // No submit action
+				swkbdInlineSetInputText(
+					&switch_kbdinline,
+					currentStr // Current value of cvar
 				);
-				if (strlen(swkbdResult) == 0) return true;
-				CV_Set(currentMenu->menuitems[itemOn].itemaction, swkbdResult);
+				swkbdInlineSetCursorPos(&switch_kbdinline, strlen(currentStr)); // Place swkbd cursor at string end
+				swkbdInlineSetKeytopTranslate(&switch_kbdinline, 0, 0); // Place kb in default location
+				Switch_Keyboard_Open();
+				break;
 			}
 			#endif
 
@@ -7008,6 +7024,24 @@ static void M_ConnectIP(INT32 choice)
 		I_FinishUpdate(); // page flip or blit buffer
 }
 
+#ifdef __SWITCH__
+
+void M_HandleConnectIP_Switch_SwkbdChanged(const char* str, SwkbdChangedStringArg* arg) {
+	SDL_strlcpy(setupm_ip, str, sizeof(setupm_ip));
+}
+
+void M_HandleConnectIP_Switch_SwkbdDecidedEnter(const char* str, SwkbdChangedStringArg* arg) {
+	S_StartSound(NULL,sfx_menu1); // Tails
+	currentMenu->lastOn = itemOn;
+	M_ConnectIP(1);
+}
+
+void M_HandleConnectIP_Switch_SwkbdMovedCursor(const char* str, SwkbdChangedStringArg* arg) {
+	swkbdInlineSetCursorPos(&switch_kbdinline, strlen(setupm_ip)); // Place swkbd cursor at string end
+}
+
+#endif
+
 // Tails 11-19-2002
 static void M_HandleConnectIP(INT32 choice)
 {
@@ -7018,9 +7052,17 @@ static void M_HandleConnectIP(INT32 choice)
 	{
 		case KEY_ENTER:
 			#ifdef __SWITCH__
-			Switch_Keyboard_GetText("IPV4 Address", setupm_ip);
-			if (strlen(swkbdResult) == 0) break;
-			SDL_strlcpy(setupm_ip, swkbdResult, sizeof(setupm_ip));
+			swkbdInlineSetChangedStringCallback(&switch_kbdinline, M_HandleConnectIP_Switch_SwkbdChanged);
+			swkbdInlineSetMovedCursorCallback(&switch_kbdinline, M_HandleConnectIP_Switch_SwkbdMovedCursor); // No cursor movement
+			swkbdInlineSetDecidedEnterCallback(&switch_kbdinline, M_HandleConnectIP_Switch_SwkbdDecidedEnter);
+			swkbdInlineSetInputText(
+				&switch_kbdinline,
+				setupm_ip // Current value of cvar
+			);
+			swkbdInlineSetCursorPos(&switch_kbdinline, strlen(setupm_ip)); // Place swkbd cursor at string end
+			swkbdInlineSetKeytopTranslate(&switch_kbdinline, 0, 0.445); // Place kb in default location
+			Switch_Keyboard_Open();
+			break;
 			#endif
 
 			S_StartSound(NULL,sfx_menu1); // Tails
@@ -7184,6 +7226,14 @@ static void M_DrawSetupMultiPlayerMenu(void)
 	}
 }
 
+#ifdef __SWITCH__
+
+void M_HandleSetupMultiPlayer_Switch_SwkbdChanged(const char* str, SwkbdChangedStringArg* arg) {
+	SDL_strlcpy(setupm_name, str, sizeof(setupm_name));
+}
+
+#endif
+
 // Handle 1P/2P MP Setup
 static void M_HandleSetupMultiPlayer(INT32 choice)
 {
@@ -7253,10 +7303,16 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 			break;
 		#ifdef __SWITCH__
 		case KEY_ENTER:
-			if (itemOn != 0) break;
-			Switch_Keyboard_GetText("Player Name", setupm_name);
-			if (strlen(swkbdResult) == 0) break;
-	        SDL_strlcpy(setupm_name, swkbdResult, sizeof(setupm_name));
+			swkbdInlineSetChangedStringCallback(&switch_kbdinline, M_HandleSetupMultiPlayer_Switch_SwkbdChanged);
+			swkbdInlineSetMovedCursorCallback(&switch_kbdinline, NULL); // No cursor movement
+			swkbdInlineSetDecidedEnterCallback(&switch_kbdinline, NULL);
+			swkbdInlineSetInputText(
+				&switch_kbdinline,
+				setupm_name // Current value of cvar
+			);
+			swkbdInlineSetCursorPos(&switch_kbdinline, strlen(setupm_name)); // Place swkbd cursor at string end
+			swkbdInlineSetKeytopTranslate(&switch_kbdinline, 0, 0); // Place kb in default location
+			Switch_Keyboard_Open();
 			break;
 		#endif
 	}
