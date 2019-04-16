@@ -11,6 +11,10 @@ SwkbdAppearArg switch_appearArg;
 Result switch_kdbresult;
 SwkbdState switch_kbdstate;
 
+void Switch_Keyboard_Deinit() {
+    swkbdInlineClose(&switch_kbdinline);
+}
+
 void Switch_Keyboard_Init() {
 	Result rc=0;
 	rc = swkbdInlineCreate(&switch_kbdinline);
