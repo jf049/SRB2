@@ -4,3 +4,5 @@ srb2switch.elf.debug
 srb2switch.elf.map
 srb2switch.nro
 srb2switch.zip
+*.zip
+switch/
