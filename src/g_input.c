@@ -332,7 +332,7 @@ static keyname_t keynames[] =
 	{KEY_2MOUSEWHEELUP, "Wheel 2 UP"},
 	{KEY_2MOUSEWHEELDOWN, "Wheel 2 Down"},
 
-#ifdef defined (__SWITCH__)
+#if defined (__SWITCH__)
 	{KEY_JOY1+0,  "JOYA"},
 	{KEY_JOY1+1,  "JOYB"},
 	{KEY_JOY1+2,  "JOYX"},
@@ -450,6 +450,7 @@ static keyname_t keynames[] =
 	{KEY_DBLJOY1+5, "DBLJOY6"},
 	{KEY_DBLJOY1+6, "DBLJOY7"},
 	{KEY_DBLJOY1+7, "DBLJOY8"},
+#endif
 #if !defined (NOMOREJOYBTN_1DBL)
 	{KEY_DBLJOY1+8, "DBLJOY9"},
 	{KEY_DBLJOY1+9, "DBLJOY10"},
@@ -829,6 +830,7 @@ void G_DefineDefaultControls(void)
 		//gamecontrolbisdefault[i][gc_scores    ][0] = KEY_2HAT1+3; // D-Pad Right
 	}
 }
+#endif
 
 INT32 G_GetControlScheme(INT32 (*fromcontrols)[2], const INT32 *gclist, INT32 gclen)
 {

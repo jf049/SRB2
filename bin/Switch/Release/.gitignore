@@ -1,8 +1,7 @@
-srb2.nacp
-srb2switch.elf
-srb2switch.elf.debug
-srb2switch.elf.map
-srb2switch.nro
-srb2switch.zip
+*.nacp
+*.elf
+*.elf.debug
+*.elf.map
+*.nro
 *.zip
 switch/

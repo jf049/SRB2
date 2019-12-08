@@ -10752,6 +10752,19 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 			break;
 
 		case KEY_ENTER:
+			#ifdef __SWITCH__
+			swkbdInlineSetChangedStringCallback(&switch_kbdinline, M_HandleSetupMultiPlayer_Switch_SwkbdChanged);
+			swkbdInlineSetMovedCursorCallback(&switch_kbdinline, NULL); // No cursor movement
+			swkbdInlineSetDecidedEnterCallback(&switch_kbdinline, NULL);
+			swkbdInlineSetInputText(
+				&switch_kbdinline,
+				setupm_name // Current value of cvar
+			);
+			swkbdInlineSetCursorPos(&switch_kbdinline, strlen(setupm_name)); // Place swkbd cursor at string end
+			swkbdInlineSetKeytopTranslate(&switch_kbdinline, 0, 0); // Place kb in default location
+			Switch_Keyboard_Open();
+			break;
+			#else
 			if (itemOn == 3
 			&& (R_SkinAvailable(setupm_cvdefaultskin->string) != setupm_fakeskin
 			|| setupm_cvdefaultcolor->value != setupm_fakecolor))
@@ -10763,6 +10776,7 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 				break;
 			}
 			/* FALLTHRU */
+			#endif
 		case KEY_RIGHTARROW:
 			if (itemOn == 1)       //player skin
 			{
@@ -10825,20 +10839,6 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 				setupm_name[l+1] = 0;
 			}
 			break;
-		#ifdef __SWITCH__
-		case KEY_ENTER:
-			swkbdInlineSetChangedStringCallback(&switch_kbdinline, M_HandleSetupMultiPlayer_Switch_SwkbdChanged);
-			swkbdInlineSetMovedCursorCallback(&switch_kbdinline, NULL); // No cursor movement
-			swkbdInlineSetDecidedEnterCallback(&switch_kbdinline, NULL);
-			swkbdInlineSetInputText(
-				&switch_kbdinline,
-				setupm_name // Current value of cvar
-			);
-			swkbdInlineSetCursorPos(&switch_kbdinline, strlen(setupm_name)); // Place swkbd cursor at string end
-			swkbdInlineSetKeytopTranslate(&switch_kbdinline, 0, 0); // Place kb in default location
-			Switch_Keyboard_Open();
-			break;
-		#endif
 	}
 
 	// check color
