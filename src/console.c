@@ -1,7 +1,7 @@
 // SONIC ROBO BLAST 2
 //-----------------------------------------------------------------------------
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2019 by Sonic Team Junior.
+// Copyright (C) 1999-2020 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -20,6 +20,7 @@
 #include "g_input.h"
 #include "hu_stuff.h"
 #include "keys.h"
+#include "r_main.h"
 #include "r_defs.h"
 #include "sounds.h"
 #include "st_stuff.h"
@@ -31,6 +32,7 @@
 #include "d_main.h"
 #include "m_menu.h"
 #include "filesrch.h"
+#include "m_misc.h"
 
 #ifdef _WINDOWS
 #include "win32/win_main.h"
@@ -595,6 +597,8 @@ void CON_ToggleOff(void)
 	CON_ClearHUD();
 	con_forcepic = 0;
 	con_clipviewtop = -1; // remove console clipping of view
+
+	I_UpdateMouseGrab();
 }
 
 boolean CON_Ready(void)
@@ -613,14 +617,6 @@ void CON_Ticker(void)
 	con_tick++;
 	con_tick &= 7;
 
-	// if the menu is open then close the console.
-	if (menuactive && con_destlines)
-	{
-		consoletoggle = false;
-		con_destlines = 0;
-		CON_ClearHUD();
-	}
-
 	// console key was pushed
 	if (consoletoggle)
 	{
@@ -631,6 +627,7 @@ void CON_Ticker(void)
 		{
 			con_destlines = 0;
 			CON_ClearHUD();
+			I_UpdateMouseGrab();
 		}
 		else
 			CON_ChangeHeight();
@@ -821,7 +818,7 @@ boolean CON_Responder(event_t *ev)
 		// check other keys only if console prompt is active
 		if (!consoleready && key < NUMINPUTS) // metzgermeister: boundary check!!
 		{
-			if (bindtable[key])
+			if (! menuactive && bindtable[key])
 			{
 				COM_BufAddText(bindtable[key]);
 				COM_BufAddText("\n");
@@ -843,6 +840,33 @@ boolean CON_Responder(event_t *ev)
 	 || key == KEY_LCTRL || key == KEY_RCTRL
 	 || key == KEY_LALT || key == KEY_RALT)
 		return true;
+
+	if (key == KEY_LEFTARROW)
+	{
+		if (input_cur != 0)
+		{
+			if (ctrldown)
+				input_cur = M_JumpWordReverse(inputlines[inputline], input_cur);
+			else
+				--input_cur;
+		}
+		if (!shiftdown)
+			input_sel = input_cur;
+		return true;
+	}
+	else if (key == KEY_RIGHTARROW)
+	{
+		if (input_cur < input_len)
+		{
+			if (ctrldown)
+				input_cur += M_JumpWord(&inputlines[inputline][input_cur]);
+			else
+				++input_cur;
+		}
+		if (!shiftdown)
+			input_sel = input_cur;
+		return true;
+	}
 
 	// ctrl modifier -- changes behavior, adds shortcuts
 	if (ctrldown)
@@ -994,23 +1018,6 @@ boolean CON_Responder(event_t *ev)
 	{
 		if (con_scrollup > 0)
 			con_scrollup--;
-		return true;
-	}
-
-	if (key == KEY_LEFTARROW)
-	{
-		if (input_cur != 0)
-			--input_cur;
-		if (!shiftdown)
-			input_sel = input_cur;
-		return true;
-	}
-	else if (key == KEY_RIGHTARROW)
-	{
-		if (input_cur < input_len)
-			++input_cur;
-		if (!shiftdown)
-			input_sel = input_cur;
 		return true;
 	}
 	else if (key == KEY_HOME)
@@ -1331,10 +1338,10 @@ void CONS_Printf(const char *fmt, ...)
 	con_scrollup = 0;
 
 	// if not in display loop, force screen update
-	if (con_startup)
+	if (con_startup && (!setrenderneeded))
 	{
 #ifdef _WINDOWS
-		patch_t *con_backpic = W_CachePatchName("CONSBACK", PU_CACHE);
+		patch_t *con_backpic = W_CachePatchName("CONSBACK", PU_PATCH);
 
 		// Jimita: CON_DrawBackpic just called V_DrawScaledPatch
 		V_DrawScaledPatch(0, 0, 0, con_backpic);
@@ -1591,10 +1598,15 @@ static void CON_DrawConsole(void)
 	// draw console background
 	if (cons_backpic.value || con_forcepic)
 	{
-		patch_t *con_backpic = W_CachePatchName("CONSBACK", PU_CACHE);
+		patch_t *con_backpic = W_CachePatchName("CONSBACK", PU_PATCH);
+		int h;
+
+		h = con_curlines/vid.dupy;
 
 		// Jimita: CON_DrawBackpic just called V_DrawScaledPatch
-		V_DrawScaledPatch(0, 0, 0, con_backpic);
+		//V_DrawScaledPatch(0, 0, 0, con_backpic);
+		V_DrawCroppedPatch(0, 0, FRACUNIT, 0, con_backpic,
+				0, ( BASEVIDHEIGHT - h ), BASEVIDWIDTH, h);
 
 		W_UnlockCachedPatch(con_backpic);
 	}
@@ -1648,8 +1660,18 @@ void CON_Drawer(void)
 	if (!con_started || !graphics_started)
 		return;
 
+	if (needpatchrecache)
+	{
+		W_FlushCachedPatches();
+		HU_LoadGraphics();
+	}
+
 	if (con_recalc)
+	{
 		CON_RecalcSize();
+		if (con_curlines <= 0)
+			CON_ClearHUD();
+	}
 
 	if (con_curlines > 0)
 		CON_DrawConsole();

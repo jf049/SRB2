@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2019 by Sonic Team Junior.
+// Copyright (C) 1999-2020 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -594,10 +594,24 @@ void P_Ticker(boolean run)
 {
 	INT32 i;
 
-	//Increment jointime even if paused.
+	// Increment jointime and quittime even if paused
 	for (i = 0; i < MAXPLAYERS; i++)
 		if (playeringame[i])
-			++players[i].jointime;
+		{
+			players[i].jointime++;
+
+			if (players[i].quittime)
+			{
+				players[i].quittime++;
+
+				if (players[i].quittime == 30 * TICRATE && G_TagGametype())
+					P_CheckSurvivors();
+
+				if (server && players[i].quittime >= (tic_t)FixedMul(cv_rejointimeout.value, 60 * TICRATE)
+				&& !(players[i].quittime % TICRATE))
+					SendKick(i, KICK_MSG_PLAYER_QUIT);
+			}
+		}
 
 	if (objectplacing)
 	{
@@ -640,6 +654,10 @@ void P_Ticker(boolean run)
 			G_WriteDemoTiccmd(&players[consoleplayer].cmd, 0);
 		if (demoplayback)
 			G_ReadDemoTiccmd(&players[consoleplayer].cmd, 0);
+
+		#ifdef HAVE_BLUA
+		LUAh_PreThinkFrame();
+		#endif
 
 		for (i = 0; i < MAXPLAYERS; i++)
 			if (playeringame[i] && players[i].mo && !P_MobjWasRemoved(players[i].mo))
@@ -738,6 +756,10 @@ void P_Ticker(boolean run)
 			G_ConsGhostTic();
 		if (modeattacking)
 			G_GhostTicker();
+
+#ifdef HAVE_BLUA
+		LUAh_PostThinkFrame();
+#endif
 	}
 
 	P_MapEnd();
@@ -757,6 +779,9 @@ void P_PreTicker(INT32 frames)
 	{
 		P_MapStart();
 
+#ifdef HAVE_BLUA
+		LUAh_PreThinkFrame();
+#endif
 		for (i = 0; i < MAXPLAYERS; i++)
 			if (playeringame[i] && players[i].mo && !P_MobjWasRemoved(players[i].mo))
 			{
@@ -790,6 +815,10 @@ void P_PreTicker(INT32 frames)
 
 		P_UpdateSpecials();
 		P_RespawnSpecials();
+
+#ifdef HAVE_BLUA
+		LUAh_PostThinkFrame();
+#endif
 
 		P_MapEnd();
 	}
