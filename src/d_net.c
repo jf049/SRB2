@@ -721,6 +721,8 @@ void Net_CloseConnection(INT32 node)
 
 	InitNode(&nodes[node]);
 	SV_AbortSendFiles(node);
+	if (server)
+		SV_AbortLuaFileTransfer(node);
 	I_NetFreeNodenum(node);
 #endif
 }
@@ -804,6 +806,10 @@ static const char *packettypename[NUMPACKETTYPE] =
 
 	"RESYNCHEND",
 	"RESYNCHGET",
+
+	"SENDINGLUAFILE",
+	"ASKLUAFILE",
+	"HASLUAFILE",
 
 	"FILEFRAGMENT",
 	"TEXTCMD",
