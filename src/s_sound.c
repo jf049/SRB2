@@ -40,6 +40,11 @@ extern INT32 msg_id;
 #include "m_misc.h" // for tunes command
 #include "m_cond.h" // for conditionsets
 
+char music_stack_nextmusname[7];
+boolean music_stack_noposition;
+UINT32 music_stack_fadeout;
+UINT32 music_stack_fadein;
+
 #ifdef HAVE_LUA_MUSICPLUS
 #include "lua_hook.h" // MusicChange hook
 #endif

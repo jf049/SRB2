@@ -285,10 +285,12 @@ int main(int argc, char **argv)
 #endif/*DEFAULTDIR*/
 			link = "latest-log.txt";
 		unlink(link);
+#ifndef __SWITCH__
 		if (symlink(logfilename, link) == -1)
 		{
 			I_OutputMsg("Error symlinking latest-log.txt: %s\n", strerror(errno));
 		}
+#endif
 #else/*defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)*/
 		logstream = fopen("latest-log.txt", "wt+");
 #endif/*defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)*/

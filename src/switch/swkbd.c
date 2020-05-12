@@ -1,8 +1,5 @@
 // Borrowed from https://github.com/joel16/NX-Shell/ (/source/keyboard.c)
 
-#include "../p_local.h"
-#include "../s_sound.h"
-
 #include "swkbd.h"
 #include <switch/applets/swkbd.h>
 
@@ -24,7 +21,6 @@ void Switch_Keyboard_Init() {
 
 	if (R_SUCCEEDED(rc))
 		rc = swkbdInlineLaunchForLibraryApplet(&switch_kbdinline, SwkbdInlineMode_AppletDisplay, 0);
-
 
 	swkbdInlineMakeAppearArg(&switch_appearArg, SwkbdType_Normal);
 	// You can optionally set switch_appearArg text / fields here.
