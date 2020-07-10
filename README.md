@@ -2,7 +2,7 @@
 
 [Sonic Robo Blast 2](https://srb2.org/) is a 3D Sonic the Hedgehog fangame based on a modified version of [Doom Legacy](http://doomlegacy.sourceforge.net/).
 
-This repo just merges other changes and fixes made by other people with network multiplayer compatibity with main game releases. 
+This repo has merges from other changes and fixes made by other people with network multiplayer compatibity with main game releases. 
 
 ## Dependencies
 - NASM (x86 builds only)
