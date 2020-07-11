@@ -48,7 +48,6 @@
 
 #include "lua_hud.h"
 
-char savegamename[256];
 gameaction_t gameaction;
 gamestate_t gamestate = GS_NULL;
 UINT8 ultimatemode = false;

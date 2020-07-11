@@ -10,7 +10,6 @@
 /// \brief SDL Mixer interface for sound
 
 #ifdef HAVE_LIBGME
-#ifdef HAVE_ZLIB
 #ifndef _MSC_VER
 #ifndef _LARGEFILE64_SOURCE
 #define _LARGEFILE64_SOURCE
@@ -25,9 +24,11 @@
 #define _FILE_OFFSET_BITS 0
 #endif
 
+#endif // HAVE_LIBGME
+
+#ifdef HAVE_ZLIB
 #include <zlib.h>
 #endif // HAVE_ZLIB
-#endif // HAVE_LIBGME
 
 #include "../doomdef.h"
 #include "../doomstat.h" // menuactive
@@ -224,6 +225,7 @@ static const char* get_zlib_error(int zErr)
 {
 	switch (zErr)
 	{
+		#ifdef HAVE_ZLIB
 		case Z_ERRNO:
 			return "Z_ERRNO";
 		case Z_STREAM_ERROR:
@@ -236,6 +238,7 @@ static const char* get_zlib_error(int zErr)
 			return "Z_BUF_ERROR";
 		case Z_VERSION_ERROR:
 			return "Z_VERSION_ERROR";
+		#endif
 		default:
 			return "unknown error";
 	}

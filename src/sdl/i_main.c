@@ -183,7 +183,7 @@ static void InitLogging(void)
 			M_PathParts(logdir) - 1,
 			M_PathParts(logfilename) - 1, 0755);
 
-#if defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)
+#if (defined (__unix__) || defined(__APPLE__) || defined (UNIXCOMMON)) && !defined (__SWITCH__)
 	logstream = fopen(logfilename, "w");
 #ifdef DEFAULTDIR
 	if (logdir)

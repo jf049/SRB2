@@ -627,6 +627,7 @@ static void D_Display(void)
 			V_DrawThinString(80, 30, V_MONOSPACE | V_BLUEMAP, s);
 			snprintf(s, sizeof s - 1, "npob %d", rs_numpolyobjects);
 			V_DrawThinString(80, 40, V_MONOSPACE | V_BLUEMAP, s);
+			#ifdef HWRENDER
 			if (rendermode == render_opengl) // OpenGL specific stats
 			{
 				snprintf(s, sizeof s - 1, "nsrt %d", rs_hw_nodesorttime / divisor);
@@ -663,6 +664,7 @@ static void D_Display(void)
 				}
 			}
 			else // software specific stats
+			#endif
 			{
 				snprintf(s, sizeof s - 1, "prtl %d", rs_sw_portaltime / divisor);
 				V_DrawThinString(30, 40, V_MONOSPACE | V_YELLOWMAP, s);

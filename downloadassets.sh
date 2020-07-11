@@ -1,6 +1,6 @@
 #!/bin/sh
 INSTALLERURL="https://github.com/STJr/SRB2/releases/download/SRB2_release_2.2.2/SRB2-v_221-Installer.exe"
-PATCHURL="http://misc.jojudge.com/srb2builds/datafiles/SRB2-v224-Patch.zip"
+PATCHURL="https://github.com/STJr/SRB2/releases/download/SRB2_release_2.2.6/SRB2-2.2.6-Patch.zip"
 DOWNLOADCMD="curl -Lo"
 
 cd assets
@@ -18,4 +18,4 @@ then
     rm srb2patch.zip
     cp * ..
 fi
-cd ../..
+cd ../.. 
