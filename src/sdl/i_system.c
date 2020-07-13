@@ -2229,7 +2229,7 @@ static void I_ShutdownTimer(void)
 // returns time in 1/TICRATE second tics
 //
 static int lastTimeFudge = -1;
-static Uint64 basetime = 0;
+static Uint64 basetime;
 // millisecond precision only
 int TimeFunction(int requested_frequency)
 {

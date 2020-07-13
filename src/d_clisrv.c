@@ -4457,7 +4457,7 @@ static void HandlePacketFromAwayNode(SINT8 node)
 			scp = netbuffer->u.servercfg.varlengthinputs;
 			CV_LoadPlayerNames(&scp);
 			CV_LoadNetVars(&scp, false);
-#ifdef JOININGAME
+#ifndef NONET
 			/// \note Wait. What if a Lua script uses some global custom variables synched with the NetVars hook?
 			///       Shouldn't them be downloaded even at intermission time?
 			///       Also, according to HandleConnect, the server will send the savegame even during intermission...
@@ -5442,6 +5442,7 @@ static void AdjustSimulatedTiccmdInputs(ticcmd_t* cmds)
 		return;
 
 	INT16 oldAngle = cmds->angleturn;
+	//INT16 oldRelAngle= cmds->oldrelangleturn);//JF049
 
 	if (gamestate == GS_LEVEL && cv_netsteadyplayers.value && !cv_netslingdelay.value)
 		CorrectPlayerTargeting(cmds);
@@ -5450,6 +5451,8 @@ static void AdjustSimulatedTiccmdInputs(ticcmd_t* cmds)
 	{
 		// If the aiming angles are different, readjust movements to go towards the player's original intended direction
 		angle_t difference = (cmds->angleturn - oldAngle) << 16;
+		//angle t relDifference = (cmds->oldrelangleturn - oldRelAngle) << 16;//JF049
+
 		char oldSidemove = cmds->sidemove, oldForwardmove = cmds->forwardmove;
 
 		cmds->sidemove = (FixedMul((fixed_t)(oldSidemove<<FRACBITS), FINECOSINE(difference>>ANGLETOFINESHIFT))
@@ -5479,7 +5482,7 @@ static void Local_Maketic(INT32 realtics)
 	if (splitscreen || botingame)
 		G_BuildTiccmd(&localcmds2, realtics, 2);
 
-	EncodeTiccmdTime(&localcmds, I_GetTime());
+EncodeTiccmdTime(&localcmds, I_GetTime());
 
 	localcmds.angleturn |= TICCMD_RECEIVED;
 	localcmds2.angleturn |= TICCMD_RECEIVED;
@@ -5579,9 +5582,9 @@ void TryRunTics(tic_t realtics)
 			D_MapChange(-1, 0, ultimatemode, false, 2, false, fromlevelselect); // finish the map change
 	}
 
-	// Get packets from the server
-	unsigned long long int frame = (I_GetTimeUs() * NEWTICRATE / 1000000);
-	netUpdateFudge = (I_GetTimeUs() - frame * 1000000 / NEWTICRATE) * 100 * NEWTICRATE / 1000000; // record the timefudge where the net update typically occurs
+		// Get packets from the server
+		unsigned long long int frame = (I_GetTimeUs() * NEWTICRATE / 1000000);
+		netUpdateFudge = (I_GetTimeUs() - frame * 1000000 / NEWTICRATE) * 100 * NEWTICRATE / 1000000; // record the timefudge where the net update typically occurs
 
 	NetUpdate();
 
@@ -5610,34 +5613,35 @@ void TryRunTics(tic_t realtics)
 	if (player_joining)
 		return;
 
-	// record the actual local controls
 	boolean canSimulate = (gamestate == GS_LEVEL)
-				&& leveltime >= TICRATE && gametic >= TICRATE && (cv_simulate.value && !server)
-				&& !resynch_local_inprogress && gametic >= lastSavestateClearedTic + TICRATE;
-	boolean recordingStates = canSimulate;
+					&& leveltime >= TICRATE && gametic >= TICRATE && (cv_simulate.value && !server)
+					&& !resynch_local_inprogress && gametic >= lastSavestateClearedTic + TICRATE;
+		boolean recordingStates = canSimulate;
 
-	if (simtic > gametic && !canSimulate)
-	{
-		// if we can't simulate anymore, we ought to reload and invalidate the savestates
-		if (gameStateBufferIsValid[gametic % BACKUPTICS])
-			P_LoadGameState(&gameStateBuffer[gametic % BACKUPTICS]);
-		else
-			CONS_Printf("Problem: game state buffer inaccessible! (simtic %d gametic %d)\n", simtic, gametic);
+		if (simtic > gametic && !canSimulate)
+		{
+			// if we can't simulate anymore, we ought to reload and invalidate the savestates
+			if (gameStateBufferIsValid[gametic % BACKUPTICS])
+				P_LoadGameState(&gameStateBuffer[gametic % BACKUPTICS]);
+			else
+				CONS_Printf("Problem: game state buffer inaccessible! (simtic %d gametic %d)\n", simtic, gametic);
 
-		simtic = gametic;
-		CONS_Printf("Clearing savestates due to !canSim\n");
-		InvalidateSavestates();
-	}
+			simtic = gametic;
+			CONS_Printf("Clearing savestates due to !canSim\n");
+			InvalidateSavestates();
+		}
 
-	PerformDebugRewinds();
+		PerformDebugRewinds();
 
-	// record the actual local controls for this frame
-	liveTic = I_GetTime();
+		// record the actual local controls for this frame
+		liveTic = I_GetTime();
 
-	for (tic_t i = 0; i < realtics; i++)
-		localTicBuffer[(liveTic - i) % BACKUPTICS] = localcmds;
+		for (tic_t i = 0; i < realtics; i++)
+			localTicBuffer[(liveTic - i) % BACKUPTICS] = localcmds;
 
-	// Run the real game as received from the server
+		// Run the real game as received from the server
+
+
 	if (neededtic > gametic && !resynch_local_inprogress)
 	{
 		if (advancedemo)
@@ -5648,7 +5652,7 @@ void TryRunTics(tic_t realtics)
 				D_StartTitle();
 		}
 		else
-		{
+			{
 			// Load the real state if it exists
 			if (simtic != gametic && gameStateBufferIsValid[gametic % BACKUPTICS])
 			{
@@ -5660,18 +5664,15 @@ void TryRunTics(tic_t realtics)
 			else if (simtic != gametic && !gameStateBufferIsValid[gametic % BACKUPTICS])
 				CONS_Printf("Problem: game state buffer inaccessible but a simulation happened!!\n");
 
-			// run the tics up to the real game tic
+			// run the count * tics
 			while (neededtic > gametic)
 			{
 				DEBFILE(va("============ Running tic %d (local %d)\n", gametic, localgametic));
-
 				targetsimtic = gametic + 1;
-
 				G_Ticker((gametic % NEWTICRATERATIO) == 0);
 				ExtraDataTicker();
 				gametic++;
 				simtic = gametic; // game state is reset, we wanna resimulate from here
-
 				consistancy[gametic%BACKUPTICS] = Consistancy();
 
 				if (recordingStates)
@@ -5800,7 +5801,6 @@ static void RunSimulations()
 			}
 		}
 	}
-
 	// simulate the rest o da future
 	issimulation = true;
 	con_muted = true;

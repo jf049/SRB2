@@ -2858,14 +2858,14 @@ static thinker_t* LoadMobjThinker(actionf_p1 thinker)
 		i = READUINT8(save_p);
 		mobj->player = &players[i];
 		mobj->player->mo = mobj;
-		
+
 		//FIXME
 		//NETPLUS
 		// added for angle prediction
-		if (consoleplayer == i)
-			localangle = mobj->angle;
-		if (secondarydisplayplayer == i)
-			localangle2 = mobj->angle;
+		// if (consoleplayer == i)
+		// 	localangle = mobj->angle;
+		// if (secondarydisplayplayer == i)
+		// 	localangle2 = mobj->angle;
 	}
 	if (diff & MD_MOVEDIR)
 		mobj->movedir = READANGLE(save_p);
@@ -5028,10 +5028,11 @@ void P_SaveNetGame(void)
 		P_NetArchiveSpecials();
 		saveTimes[6] = I_GetTimeUs();
 		P_NetArchiveColormaps();
-		P_NetArchiveWaypoints();
 		saveTimes[7] = I_GetTimeUs();
+		P_NetArchiveWaypoints();
+		saveTimes[8] = I_GetTimeUs();
 	}
-	saveTimes[8] = saveTimes[9] = 0;
+	saveTimes[9] = 0;
 	LUA_Archive();
 
 	P_ArchiveLuabanksAndConsistency();
@@ -5060,7 +5061,7 @@ boolean P_LoadNetGame(boolean preserveLevel)
 {
 	CV_LoadNetVars(&save_p, false);
 	if (!P_NetUnArchiveMisc(preserveLevel))
-		return false;
+		return false;		
 
 	P_NetUnArchivePlayers();
 	if (gamestate == GS_LEVEL)
