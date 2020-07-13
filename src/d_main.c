@@ -72,6 +72,7 @@ int	snprintf(char *str, size_t n, const char *fmt, ...);
 #include "keys.h"
 #include "filesrch.h" // refreshdirmenu, mainwadstally
 #include "g_input.h" // tutorial mode control scheming
+#include "i_net.h" // for netvariabletime (srb2netplus)
 
 #ifdef CMAKECONFIG
 #include "config.h"
@@ -726,6 +727,7 @@ void D_CheckRendererState(void)
 // =========================================================================
 
 tic_t rendergametic;
+boolean hasAckedPackets = false;
 
 void D_SRB2Loop(void)
 {
@@ -855,6 +857,7 @@ void D_SRB2Loop(void)
 #endif
 
 		LUA_Step();
+		hasAckedPackets = false;
 	}
 }
 

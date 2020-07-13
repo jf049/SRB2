@@ -4457,7 +4457,7 @@ static void HandlePacketFromAwayNode(SINT8 node)
 			scp = netbuffer->u.servercfg.varlengthinputs;
 			CV_LoadPlayerNames(&scp);
 			CV_LoadNetVars(&scp, false);
-#ifdef JOININGAME
+#ifndef NONET
 			/// \note Wait. What if a Lua script uses some global custom variables synched with the NetVars hook?
 			///       Shouldn't them be downloaded even at intermission time?
 			///       Also, according to HandleConnect, the server will send the savegame even during intermission...
@@ -5442,6 +5442,7 @@ static void AdjustSimulatedTiccmdInputs(ticcmd_t* cmds)
 		return;
 
 	INT16 oldAngle = cmds->angleturn;
+	//INT16 oldRelAngle= cmds->oldrelangleturn);//JF049
 
 	if (gamestate == GS_LEVEL && cv_netsteadyplayers.value && !cv_netslingdelay.value)
 		CorrectPlayerTargeting(cmds);
@@ -5450,6 +5451,8 @@ static void AdjustSimulatedTiccmdInputs(ticcmd_t* cmds)
 	{
 		// If the aiming angles are different, readjust movements to go towards the player's original intended direction
 		angle_t difference = (cmds->angleturn - oldAngle) << 16;
+		//angle t relDifference = (cmds->oldrelangleturn - oldRelAngle) << 16;//JF049
+
 		char oldSidemove = cmds->sidemove, oldForwardmove = cmds->forwardmove;
 
 		cmds->sidemove = (FixedMul((fixed_t)(oldSidemove<<FRACBITS), FINECOSINE(difference>>ANGLETOFINESHIFT))
@@ -5664,14 +5667,11 @@ void TryRunTics(tic_t realtics)
 			while (neededtic > gametic)
 			{
 				DEBFILE(va("============ Running tic %d (local %d)\n", gametic, localgametic));
-
 				targetsimtic = gametic + 1;
-
 				G_Ticker((gametic % NEWTICRATERATIO) == 0);
 				ExtraDataTicker();
 				gametic++;
 				simtic = gametic; // game state is reset, we wanna resimulate from here
-
 				consistancy[gametic%BACKUPTICS] = Consistancy();
 
 				if (recordingStates)

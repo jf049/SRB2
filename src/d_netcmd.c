@@ -4204,6 +4204,11 @@ static void SoundTest_OnChange(void)
 	S_StartSound(NULL, cv_soundtest.value);
 }
 
+static void TimeFudge_OnChange(void)
+{
+	I_SetTime(I_GetTime(), cv_timefudge.value, true);
+}
+
 static void AutoBalance_OnChange(void)
 {
 	autobalance = (INT16)cv_autobalance.value;
