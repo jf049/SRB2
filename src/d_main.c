@@ -72,7 +72,6 @@ int	snprintf(char *str, size_t n, const char *fmt, ...);
 #include "keys.h"
 #include "filesrch.h" // refreshdirmenu, mainwadstally
 #include "g_input.h" // tutorial mode control scheming
-#include "i_net.h" // for netvariabletime (srb2netplus)
 
 #ifdef CMAKECONFIG
 #include "config.h"
@@ -602,7 +601,7 @@ static void D_Display(void)
 			snprintf(s, sizeof s - 1, "SysMiss %.2f%%", lostpercent);
 			V_DrawRightAlignedString(BASEVIDWIDTH, BASEVIDHEIGHT-ST_HEIGHT-10, V_YELLOWMAP, s);
 		}
-		
+
 		if (cv_renderstats.value)
 		{
 			char s[50];
@@ -611,7 +610,7 @@ static void D_Display(void)
 			rs_prevframetime = I_GetTimeMicros();
 
 			if (rs_rendercalltime > 10000) divisor = 1000;
-			
+
 			snprintf(s, sizeof s - 1, "ft   %d", frametime / divisor);
 			V_DrawThinString(30, 10, V_MONOSPACE | V_YELLOWMAP, s);
 			snprintf(s, sizeof s - 1, "rtot %d", rs_rendercalltime / divisor);
@@ -727,7 +726,6 @@ void D_CheckRendererState(void)
 // =========================================================================
 
 tic_t rendergametic;
-boolean hasAckedPackets = false;
 
 void D_SRB2Loop(void)
 {
@@ -762,7 +760,7 @@ void D_SRB2Loop(void)
 	"===========================================================================\n");
 
 	// hack to start on a nice clear console screen.
-	//COM_ImmedExecute("cls;version");
+	COM_ImmedExecute("cls;version");
 
 	I_FinishUpdate(); // page flip or blit buffer
 	/*
@@ -781,23 +779,7 @@ void D_SRB2Loop(void)
 			lastwipetic = 0;
 		}
 
-		if (cv_netvariabletime.value != -1)
-		{
-			if (gamestate == GS_LEVEL && consoleplayer != 0)
-			{
-				if (I_NetCanGet() && !hasAckedPackets)
-				{
-					I_SetTime(max(I_GetTime(), oldentertics + 1), 0, false); // we just got a packet, execute it asap!
-					hasAckedPackets = true;
-				}
-				else if (!I_NetCanGet() && I_GetTime() - oldentertics < 2)
-				{
-					// wait a bit longer for a packet
-					I_Sleep();
-					continue;
-				}
-			}
-		}
+
 
 		// get real tics
 		entertic = I_GetTime();
@@ -873,7 +855,6 @@ void D_SRB2Loop(void)
 #endif
 
 		LUA_Step();
-		hasAckedPackets = false;
 	}
 }
 

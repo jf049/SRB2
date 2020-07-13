@@ -2229,6 +2229,7 @@ static void I_ShutdownTimer(void)
 // returns time in 1/TICRATE second tics
 //
 static int lastTimeFudge = -1;
+extern consvar_t cv_timefudge;
 static Uint64 basetime = 0;
 // millisecond precision only
 int TimeFunction(int requested_frequency)
@@ -2261,34 +2262,6 @@ int TimeFunction(int requested_frequency)
 
 	return ticks;
 }
-
-// Adjusts the timer to the given tic time. The timer is set as though this tic has just started plus a fudge between 0 and 100.
-// A fudge of 99 means that although the assigned tic is valid, we are very very close to the next tic
-//FOR LINUX
-static unsigned int starttickcount = 0;
-void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_frequency later
-{
-	//
-	// unsigned int oldTickCount = starttickcount;
-	// int64_t oldBaseTime = basetime;
-
-	tic = max(tic, SDL_GetTicks());
-
-	if (starttickcount)
-	{
-		starttickcount = SDL_GetTicks() - (unsigned int)((UINT64)tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
-		if (useAbsoluteFudge)
-		{
-			starttickcount = starttickcount * NEWTICRATE / 1000 * 1000 * NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
-		}
-	}
-	if (useAbsoluteFudge)
-	{
-		basetime = basetime * NEWTICRATE / 1000 * 1000 / NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
-	}
-}
-
-
 
 UINT64 I_GetTimeUs(void)
 {
