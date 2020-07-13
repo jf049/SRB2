@@ -2157,7 +2157,7 @@ UINT64 I_GetTimeUs(void)
 	}
 	else
 	{
-		if (requested_frequency > 1000)
+		if (NEWTICRATE > 1000)
 			timeUs = (GetTickCount() - starttickcount) * excess_frequency;
 		else
 			timeUs = (GetTickCount() - starttickcount)/(1000/NEWTICRATE);
@@ -2172,7 +2172,7 @@ UINT64 I_GetTimeUs(void)
 void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_frequency later
 {
 	DWORD oldTickCount = starttickcount;
-
+	static LARGE_INTEGER basetime = {{0, 0}};
 	tic = max(tic, I_GetTime());
 
 	if (starttickcount)
@@ -2185,19 +2185,23 @@ void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_f
 		}
 	}
 
+	static LARGE_INTEGER frequency;
+	if (!QueryPerformanceFrequency(&frequency))
+		frequency.QuadPart = 0;
+
 	if (frequency.QuadPart)
 	{
 		LARGE_INTEGER currtime; // use only LowPart if high resolution counter is not available
 
 		if (QueryPerformanceCounter(&currtime))
 		{
-			basetime = currtime.QuadPart - (tic * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / TICRATE / 100);
+			basetime.QuadPart = currtime.QuadPart - (tic * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / TICRATE / 100);
 
 			if (useAbsoluteFudge)
 			{
 				basetime.QuadPart = basetime.QuadPart * NEWTICRATE / frequency.QuadPart * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / NEWTICRATE / 100;
 			}
-
+		}
 	}
 	else if (pfntimeGetTime)
 	{
@@ -2209,6 +2213,7 @@ void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_f
 		}
 	}
 }
+
 
 
 static void I_ShutdownTimer(void)
