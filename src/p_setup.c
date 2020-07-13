@@ -3490,6 +3490,11 @@ static void P_InitGametype(void)
   */
 boolean P_LoadLevel(boolean fromnetsave)
 {
+	if (issimulation)
+	{
+		return true;
+	}
+
 	// use gamemap to get map number.
 	// 99% of the things already did, so.
 	// Map header should always be in place at this point
@@ -3507,6 +3512,8 @@ boolean P_LoadLevel(boolean fromnetsave)
 	// Reset the palette
 	if (rendermode != render_none)
 		V_SetPaletteLump("PLAYPAL");
+	// Invalidate simulation save states
+	InvalidateSavestates();
 
 	// Initialize sector node list.
 	P_Initsecnode();

@@ -2118,6 +2118,99 @@ DWORD TimeFunction(int requested_frequency)
 	return newtics;
 }
 
+//FOR WIN32!!!! NOT GUARANTEED TO WORK LOL GET LINUX INSTEAD LOLOLOLOL
+UINT64 I_GetTimeUs(void)
+{
+	UINT64 timeUs;
+	int excess_frequency = NEWTICRATE / 1000;
+
+	if (!starttickcount) // high precision timer
+	{
+		LARGE_INTEGER currtime; // use only LowPart if high resolution counter is not available
+		static LARGE_INTEGER basetime = {{0, 0}};
+
+		// use this if High Resolution timer is found
+		static LARGE_INTEGER frequency;
+
+		if (!basetime.LowPart)
+		{
+			if (!QueryPerformanceFrequency(&frequency))
+				frequency.QuadPart = 0;
+			else
+				QueryPerformanceCounter(&basetime);
+		}
+
+		if (frequency.LowPart && QueryPerformanceCounter(&currtime))
+		{
+			timeUs = (INT32)((currtime.QuadPart - basetime.QuadPart) * NEWTICRATE / frequency.QuadPart);
+		}
+		else if (pfntimeGetTime)
+		{
+			currtime.LowPart = pfntimeGetTime();
+			if (!basetime.LowPart)
+				basetime.LowPart = currtime.LowPart;
+			if (NEWTICRATE > 1000)
+				timeUs = currtime.LowPart - basetime.LowPart * excess_frequency;
+			else
+				timeUs = (currtime.LowPart - basetime.LowPart)/(1000/NEWTICRATE);
+		}
+	}
+	else
+	{
+		if (requested_frequency > 1000)
+			timeUs = (GetTickCount() - starttickcount) * excess_frequency;
+		else
+			timeUs = (GetTickCount() - starttickcount)/(1000/NEWTICRATE);
+	}
+
+	return timeUs;
+}
+
+// Adjusts the timer to the given tic time. The timer is set as though this tic has just started plus a fudge between 0 and 100.
+// A fudge of 99 means that although the assigned tic is valid, we are very very close to the next tic
+//FOR WIN32!!!! NOT GUARANTEED TO WORK LOL GET LINUX INSTEAD LOLOLOLOL
+void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_frequency later
+{
+	DWORD oldTickCount = starttickcount;
+
+	tic = max(tic, I_GetTime());
+
+	if (starttickcount)
+	{
+		starttickcount = GetTickCount() - (DWORD)((UINT64)tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
+
+		if (useAbsoluteFudge)
+		{
+			starttickcount = starttickcount * NEWTICRATE / 1000 * 1000 * NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
+		}
+	}
+
+	if (frequency.QuadPart)
+	{
+		LARGE_INTEGER currtime; // use only LowPart if high resolution counter is not available
+
+		if (QueryPerformanceCounter(&currtime))
+		{
+			basetime = currtime.QuadPart - (tic * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / TICRATE / 100);
+
+			if (useAbsoluteFudge)
+			{
+				basetime.QuadPart = basetime.QuadPart * NEWTICRATE / frequency.QuadPart * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / NEWTICRATE / 100;
+			}
+
+	}
+	else if (pfntimeGetTime)
+	{
+		basetime.QuadPart = pfntimeGetTime() - (tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
+
+		if (useAbsoluteFudge)
+		{
+			basetime.QuadPart = basetime.QuadPart * NEWTICRATE / 1000 * 1000 / NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
+		}
+	}
+}
+
+
 static void I_ShutdownTimer(void)
 {
 	pfntimeGetTime = NULL;
@@ -2135,15 +2228,30 @@ static void I_ShutdownTimer(void)
 // I_GetTime
 // returns time in 1/TICRATE second tics
 //
-
+static int lastTimeFudge = -1;
+static Uint64 basetime = 0;
 // millisecond precision only
 int TimeFunction(int requested_frequency)
 {
-	static Uint64 basetime = 0;
-		   Uint64 ticks = SDL_GetTicks();
+
+	Uint64 ticks = SDL_GetTicks();
 
 	if (!basetime)
 		basetime = ticks;
+
+		// fudge the timer for better netgame sync
+		if (cv_timefudge.value != lastTimeFudge)
+		{
+			Uint64 frame = basetime * requested_frequency / 1000;
+
+			if (cv_timefudge.value > lastTimeFudge)
+			{
+				frame--; // do not allow the same tic to play twice
+			}
+
+			basetime = (Uint64)(frame * 1000 / requested_frequency + 1000 * cv_timefudge.value / requested_frequency / 100);
+			lastTimeFudge = cv_timefudge.value;
+		}
 
 	ticks -= basetime;
 
@@ -2152,6 +2260,41 @@ int TimeFunction(int requested_frequency)
 	ticks = (ticks/1000);
 
 	return ticks;
+}
+
+// Adjusts the timer to the given tic time. The timer is set as though this tic has just started plus a fudge between 0 and 100.
+// A fudge of 99 means that although the assigned tic is valid, we are very very close to the next tic
+//FOR LINUX
+static unsigned int starttickcount = 0;
+void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_frequency later
+{
+	if (!basetime)
+		basetime = ticks;
+
+	unsigned int oldTickCount = starttickcount;
+	int64_t oldBaseTime = basetime;
+
+	tic = max(tic, SDL_GetTicks());
+
+	if (starttickcount)
+	{
+		starttickcount = GetTickCount() - (unsigned int)((UINT64)tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
+		if (useAbsoluteFudge)
+		{
+			starttickcount = starttickcount * NEWTICRATE / 1000 * 1000 * NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
+		}
+	}
+	if (useAbsoluteFudge)
+	{
+		basetime = (Uint64)(frame * 1000 / NEWTICRATE + 1000 * cv_timefudge.value / NEWTICRATE / 100);
+	}
+}
+
+
+
+UINT64 I_GetTimeUs(void)
+{
+	return (SDL_GetTicks() - basetime) * 1000;
 }
 #endif
 
