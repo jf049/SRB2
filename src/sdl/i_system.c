@@ -2268,11 +2268,9 @@ int TimeFunction(int requested_frequency)
 static unsigned int starttickcount = 0;
 void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_frequency later
 {
-	if (!basetime)
-		basetime = SDL_GetTicks();
-
-	//unsigned int oldTickCount = starttickcount;
-	//int64_t oldBaseTime = basetime;
+	//
+	// unsigned int oldTickCount = starttickcount;
+	// int64_t oldBaseTime = basetime;
 
 	tic = max(tic, SDL_GetTicks());
 
