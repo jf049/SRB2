@@ -2239,19 +2239,19 @@ int TimeFunction(int requested_frequency)
 	if (!basetime)
 		basetime = ticks;
 
-		// fudge the timer for better netgame sync
-		if (cv_timefudge.value != lastTimeFudge)
+	// fudge the timer for better netgame sync
+	if (cv_timefudge.value != lastTimeFudge)
+	{
+		Uint64 frame = basetime * requested_frequency / 1000;
+
+		if (cv_timefudge.value > lastTimeFudge)
 		{
-			Uint64 frame = basetime * requested_frequency / 1000;
-
-			if (cv_timefudge.value > lastTimeFudge)
-			{
-				frame--; // do not allow the same tic to play twice
-			}
-
-			basetime = (Uint64)(frame * 1000 / requested_frequency + 1000 * cv_timefudge.value / requested_frequency / 100);
-			lastTimeFudge = cv_timefudge.value;
+			frame--; // do not allow the same tic to play twice
 		}
+
+		basetime = (Uint64)(frame * 1000 / requested_frequency + 1000 * cv_timefudge.value / requested_frequency / 100);
+		lastTimeFudge = cv_timefudge.value;
+	}
 
 	ticks -= basetime;
 
@@ -2268,17 +2268,15 @@ int TimeFunction(int requested_frequency)
 static unsigned int starttickcount = 0;
 void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_frequency later
 {
-	if (!basetime)
-		basetime = ticks;
-
-	unsigned int oldTickCount = starttickcount;
-	int64_t oldBaseTime = basetime;
+	//
+	// unsigned int oldTickCount = starttickcount;
+	// int64_t oldBaseTime = basetime;
 
 	tic = max(tic, SDL_GetTicks());
 
 	if (starttickcount)
 	{
-		starttickcount = GetTickCount() - (unsigned int)((UINT64)tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
+		starttickcount = SDL_GetTicks() - (unsigned int)((UINT64)tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
 		if (useAbsoluteFudge)
 		{
 			starttickcount = starttickcount * NEWTICRATE / 1000 * 1000 * NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
@@ -2286,7 +2284,7 @@ void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_f
 	}
 	if (useAbsoluteFudge)
 	{
-		basetime = (Uint64)(frame * 1000 / NEWTICRATE + 1000 * cv_timefudge.value / NEWTICRATE / 100);
+		basetime = basetime * NEWTICRATE / 1000 * 1000 / NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
 	}
 }
 

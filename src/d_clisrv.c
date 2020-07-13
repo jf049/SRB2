@@ -2215,7 +2215,7 @@ static void CL_LoadReceivedSavegame(void)
 	automapactive = false;
 
 	// load a base level
-	if (P_LoadNetGame())
+	if (P_LoadNetGame(false))
 	{
 		const UINT8 actnum = mapheaderinfo[gamemap-1]->actnum;
 		CONS_Printf(M_GetText("Map is now \"%s"), G_BuildMapName(gamemap));
