@@ -95,7 +95,7 @@ typedef off_t off64_t;
   #define USE_PNG // Only actually use PNG if write is supported.
   #if defined (PNG_WRITE_APNG_SUPPORTED) //|| !defined(PNG_STATIC)
     #include "apng.h"
-    /* /* #define USE_APNG */ */
+    /* #define USE_APNG */
   #endif
   // See hardware/hw_draw.c for a similar check to this one.
  #endif

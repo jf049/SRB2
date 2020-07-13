@@ -2061,6 +2061,9 @@ ticcmd_t *I_BaseTiccmd2(void)
 static HMODULE winmm = NULL;
 static DWORD starttickcount = 0; // hack for win2k time bug
 static p_timeGetTime pfntimeGetTime = NULL;
+static int lastTimeFudge = -1;
+extern consvar_t cv_timefudge;
+static Uint64 basetime = 0;
 
 // ---------
 // I_GetTime
@@ -2075,13 +2078,14 @@ DWORD TimeFunction(int requested_frequency)
 	// this var acts as a multiplier if sub-millisecond precision is asked but is not available
 	int excess_frequency = requested_frequency / 1000;
 
+	// use this if High Resolution timer is found
+	static LARGE_INTEGER frequency;
+	static LARGE_INTEGER basetime = {{0, 0}};
 	if (!starttickcount) // high precision timer
 	{
 		LARGE_INTEGER currtime; // use only LowPart if high resolution counter is not available
-		static LARGE_INTEGER basetime = {{0, 0}};
 
-		// use this if High Resolution timer is found
-		static LARGE_INTEGER frequency;
+
 
 		if (!basetime.LowPart)
 		{
@@ -2115,6 +2119,34 @@ DWORD TimeFunction(int requested_frequency)
 			newtics = (GetTickCount() - starttickcount)/(1000/requested_frequency);
 	}
 
+	//only high resolution timer at the moment
+	if (cv_timefudge.value != lastTimeFudge)
+	{
+		if (frequency.QuadPart)
+		{
+			unsigned long long frame = basetime.QuadPart * NEWTICRATE / frequency.QuadPart;
+
+			if (cv_timefudge.value > lastTimeFudge)
+			{
+				frame--; // do not allow the same tic to play twice
+			}
+
+			basetime.QuadPart = frame * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * cv_timefudge.value / TICRATE / 100;
+		}
+		if (starttickcount)
+		{
+			unsigned long long frame = starttickcount * NEWTICRATE / 1000;
+
+			if (cv_timefudge.value > lastTimeFudge)
+			{
+				frame--; // do not allow the same tic to play twice
+			}
+
+			starttickcount = (DWORD)(frame * 1000 / NEWTICRATE + 1000 * cv_timefudge.value / TICRATE / 100);
+		}
+
+		lastTimeFudge = cv_timefudge.value;
+	}
 	return newtics;
 }
 
@@ -2157,57 +2189,13 @@ UINT64 I_GetTimeUs(void)
 	}
 	else
 	{
-		if (requested_frequency > 1000)
+		if (NEWTICRATE > 1000)
 			timeUs = (GetTickCount() - starttickcount) * excess_frequency;
 		else
 			timeUs = (GetTickCount() - starttickcount)/(1000/NEWTICRATE);
 	}
 
 	return timeUs;
-}
-
-// Adjusts the timer to the given tic time. The timer is set as though this tic has just started plus a fudge between 0 and 100.
-// A fudge of 99 means that although the assigned tic is valid, we are very very close to the next tic
-//FOR WIN32!!!! NOT GUARANTEED TO WORK LOL GET LINUX INSTEAD LOLOLOLOL
-void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_frequency later
-{
-	DWORD oldTickCount = starttickcount;
-
-	tic = max(tic, I_GetTime());
-
-	if (starttickcount)
-	{
-		starttickcount = GetTickCount() - (DWORD)((UINT64)tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
-
-		if (useAbsoluteFudge)
-		{
-			starttickcount = starttickcount * NEWTICRATE / 1000 * 1000 * NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
-		}
-	}
-
-	if (frequency.QuadPart)
-	{
-		LARGE_INTEGER currtime; // use only LowPart if high resolution counter is not available
-
-		if (QueryPerformanceCounter(&currtime))
-		{
-			basetime = currtime.QuadPart - (tic * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / TICRATE / 100);
-
-			if (useAbsoluteFudge)
-			{
-				basetime.QuadPart = basetime.QuadPart * NEWTICRATE / frequency.QuadPart * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / NEWTICRATE / 100;
-			}
-
-	}
-	else if (pfntimeGetTime)
-	{
-		basetime.QuadPart = pfntimeGetTime() - (tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
-
-		if (useAbsoluteFudge)
-		{
-			basetime.QuadPart = basetime.QuadPart * NEWTICRATE / 1000 * 1000 / NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
-		}
-	}
 }
 
 
