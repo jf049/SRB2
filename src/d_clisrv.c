@@ -5470,7 +5470,7 @@ static void AdjustSimulatedTiccmdInputs(ticcmd_t* cmds)
 
 static void FixLocalAimingIssue(INT32 playernum) //JF049
 {
-	if (server && (!(playernum == consoleplauer) || !(playernum == secondarydisplayplayer)))
+	if (server && (!(playernum == consoleplayer) || !(playernum == secondarydisplayplayer)))
 		return;
 	if (playeringame[playernum] && players[playernum].mo && !players[playernum].climbing)
 	{
