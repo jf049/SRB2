@@ -5481,7 +5481,8 @@ static void FixLocalAimingIssue(INT32 playernum) //JF049
 			// CONS_Printf("%6d \n", (P_GetLocalAngle(&players[consoleplayer]) - players[consoleplayer].mo->angle));
 			CONS_Printf("Fixing aim to mobj, delta = %i \n", delta);
 			// players[playernum].mo->angle = localangle;
-			P_ForceLocalAngle(&players[consoleplayer], players[consoleplayer].mo->angle);
+			// P_ForceLocalAngle(&players[consoleplayer], players[consoleplayer].mo->angle);
+			P_ForceLocalAngle(&players[consoleplayer], players[consoleplayer].drawangle);
 		}
 	}
 }
