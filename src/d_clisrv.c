@@ -153,6 +153,7 @@ void EncodeTiccmdTime(ticcmd_t* ticcmd, tic_t time);
 tic_t DecodeTiccmdTime(const ticcmd_t* ticcmd);
 
 static void AdjustSimulatedTiccmdInputs(ticcmd_t* cmds);
+static void FixLocalAimingIssue(INT32 playernum);
 
 static void RunSimulations();
 
@@ -5467,6 +5468,24 @@ static void AdjustSimulatedTiccmdInputs(ticcmd_t* cmds)
 	lastCmds = *cmds;
 }
 
+static void FixLocalAimingIssue(INT32 playernum) //JF049
+{
+	if (server && (!(playernum == consoleplauer) || !(playernum == secondarydisplayplayer)))
+		return;
+	if (playeringame[playernum] && players[playernum].mo && !players[playernum].climbing)
+	{
+		//TODO find a way to rotate mobj correctly
+		INT16 delta = (INT16)((players[consoleplayer].mo->angle - P_GetLocalAngle(&players[consoleplayer])) >> 16);
+		if (abs(delta) > 10)
+		{
+			// CONS_Printf("%6d \n", (P_GetLocalAngle(&players[consoleplayer]) - players[consoleplayer].mo->angle));
+			CONS_Printf("Fixing aim to mobj, delta = %i \n", delta);
+			// players[playernum].mo->angle = localangle;
+			P_ForceLocalAngle(&players[consoleplayer], players[consoleplayer].mo->angle);
+		}
+	}
+}
+
 //
 // TryRunTics
 //
@@ -5478,6 +5497,7 @@ static void Local_Maketic(INT32 realtics)
 	                   // and G_MapEventsToControls
 	if (!dedicated) rendergametic = gametic;
 	// translate inputs (keyboard/mouse/joystick) into game controls
+	FixLocalAimingIssue(consoleplayer);//JF049
 	G_BuildTiccmd(&localcmds, realtics, 1);
 	if (splitscreen || botingame)
 		G_BuildTiccmd(&localcmds2, realtics, 2);
