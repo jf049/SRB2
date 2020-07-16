@@ -5061,7 +5061,7 @@ boolean P_LoadNetGame(boolean preserveLevel)
 {
 	CV_LoadNetVars(&save_p, false);
 	if (!P_NetUnArchiveMisc(preserveLevel))
-		return false;		
+		return false;
 
 	P_NetUnArchivePlayers();
 	if (gamestate == GS_LEVEL)
