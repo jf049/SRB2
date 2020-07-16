@@ -5475,13 +5475,14 @@ static void FixLocalAimingIssue(INT32 playernum) //JF049
 	if (playeringame[playernum] && players[playernum].mo && !players[playernum].climbing)
 	{
 		//TODO find a way to rotate mobj correctly
-		INT16 delta = (INT16)((players[consoleplayer].mo->angle - P_GetLocalAngle(&players[consoleplayer])) >> 16);
+		INT16 delta = (INT16)((players[consoleplayer].drawangle - P_GetLocalAngle(&players[consoleplayer])) >> 16);
 		if (abs(delta) > 10)
 		{
 			// CONS_Printf("%6d \n", (P_GetLocalAngle(&players[consoleplayer]) - players[consoleplayer].mo->angle));
 			CONS_Printf("Fixing aim to mobj, delta = %i \n", delta);
 			// players[playernum].mo->angle = localangle;
-			P_ForceLocalAngle(&players[consoleplayer], players[consoleplayer].mo->angle);
+			// P_ForceLocalAngle(&players[consoleplayer], players[consoleplayer].mo->angle);
+			P_ForceLocalAngle(&players[consoleplayer], players[consoleplayer].drawangle);
 		}
 	}
 }
