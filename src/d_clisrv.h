@@ -49,6 +49,7 @@ applications may follow different packet versions.
 
 // Maximum number of client-side simulations allowed. A simulation is a version of the game state extrapolated some frames ahead to cancel out network latency
 #define MAXSIMULATIONS (TICCMD_TIME_SIZE-1)
+
 //
 // Packet structure
 //
@@ -538,10 +539,6 @@ typedef enum
 
 } kickreason_t;
 
-/* the max number of name changes in some time period */
-#define MAXNAMECHANGES (5)
-#define NAMECHANGERATE (60*TICRATE)
-
 // Player movement histories for simulated gamestates
 typedef struct
 {
@@ -553,6 +550,10 @@ typedef struct
 
 } steadyplayer_t;
 
+
+/* the max number of name changes in some time period */
+#define MAXNAMECHANGES (5)
+#define NAMECHANGERATE (60*TICRATE)
 
 extern boolean server;
 extern boolean serverrunning;

@@ -1343,11 +1343,10 @@ void Polyobj_InitLevel(void)
 			qitem = (mobjqitem_t *)M_QueueIterator(&spawnqueue);
 
 			Polyobj_spawnPolyObj(i, qitem->mo, qitem->mo->spawnpoint->tag);
-			//TODO do we really need to hold the value of tag and angle?
 			PolyObjects[i].origx = qitem->mo->x;
 			PolyObjects[i].origy = qitem->mo->y;
 			PolyObjects[i].origz = qitem->mo->z;
-			PolyObjects[i].origangle = qitem->mo->spawnpoint->angle;
+			PolyObjects[i].tag = qitem->mo->spawnpoint->tag;
 		}
 
 		// move polyobjects to spawn points

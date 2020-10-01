@@ -1543,7 +1543,7 @@ ReadNetVar (UINT8 **p, char **return_value, boolean *return_stealth)
 	netid   = READUINT16 (*p);
 	val     = (char *)*p;
 	SKIPSTRING (*p);
-	stealth = READUINT8  (*p);
+	stealth = READUINT8(*p) || (serverloading && serverloadingstealth);
 
 	cvar = CV_FindNetVar(netid);
 
@@ -1675,7 +1675,6 @@ static void CV_LoadVars(UINT8 **p,
 
 	// prevent "invalid command received"
 	serverloading = true;
-	serverloadingstealth = onlyIfChanged;
 
 	for (cvar = consvar_vars; cvar; cvar = cvar->next)
 		if (cvar->flags & CV_NETVAR)
@@ -1693,8 +1692,9 @@ static void CV_LoadVars(UINT8 **p,
 	serverloading = false;
 }
 
-void CV_LoadNetVars(UINT8 **p)
+void CV_LoadNetVars(UINT8 **p, boolean onlyIfChanged)
 {
+	serverloadingstealth = onlyIfChanged;
 	CV_LoadVars(p, ReadNetVar);
 }
 

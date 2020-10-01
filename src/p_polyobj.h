@@ -116,7 +116,7 @@ typedef struct polyobj_s
 	INT32 spawntrans; // Translucency the polyobject originally spawned with
 
 	fixed_t origx, origy, origz;
-	INT16 origangle;
+	int16_t tag;
 } polyobj_t;
 
 //

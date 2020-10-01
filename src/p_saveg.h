@@ -43,7 +43,11 @@ typedef struct
 	UINT8* buffer;
 } savestate_t;
 
+// Persistent storage/archiving.
+// These are the load / save game routines.
+
 void P_SaveGameState(savestate_t* savestate);
+boolean P_LoadGame(INT16 mapoverride);
 boolean P_LoadNetGame(boolean preserveLevel);
 boolean P_LoadGameState(const savestate_t* savestate);
 

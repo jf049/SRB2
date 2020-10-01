@@ -2058,6 +2058,9 @@ ticcmd_t *I_BaseTiccmd2(void)
 	return &emptycmd2;
 }
 
+static int lastTimeFudge = -1;	
+extern consvar_t cv_timefudge;
+
 #if defined (_WIN32)
 static HMODULE winmm = NULL;
 static DWORD starttickcount = 0; // hack for win2k time bug
@@ -2080,6 +2083,7 @@ DWORD TimeFunction(int requested_frequency)
 	if (!starttickcount) // high precision timer
 	{
 		LARGE_INTEGER currtime; // use only LowPart if high resolution counter is not available
+		static LARGE_INTEGER basetime = {{0, 0}};
 
 		// use this if High Resolution timer is found
 		static LARGE_INTEGER frequency;
@@ -2216,55 +2220,55 @@ UINT64 I_GetTimeUs(void)
 
 // Adjusts the timer to the given tic time. The timer is set as though this tic has just started plus a fudge between 0 and 100.
 // A fudge of 99 means that although the assigned tic is valid, we are very very close to the next tic
-void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge)
-{
-	DWORD oldTickCount = starttickcount;
-	LARGE_INTEGER oldBaseTime = basetime;
+// void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge)
+// {
+// 	DWORD oldTickCount = starttickcount;
+// 	LARGE_INTEGER oldBaseTime = basetime;
 
-	tic = max(tic, I_GetTime());
+// 	tic = max(tic, I_GetTime());
 
-	if (starttickcount)
-	{
-		starttickcount = GetTickCount() - (DWORD)((UINT64)tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
+// 	if (starttickcount)
+// 	{
+// 		starttickcount = GetTickCount() - (DWORD)((UINT64)tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
 
-		if (useAbsoluteFudge)
-		{
-			starttickcount = starttickcount * NEWTICRATE / 1000 * 1000 * NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
-		}
-	}
-	static LARGE_INTEGER frequency;
-	if (!basetime.LowPart)
-	{
-		if (!QueryPerformanceFrequency(&frequency))
-			frequency.QuadPart = 0;
-		else
-			QueryPerformanceCounter(&basetime);
-	}
+// 		if (useAbsoluteFudge)
+// 		{
+// 			starttickcount = starttickcount * NEWTICRATE / 1000 * 1000 * NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
+// 		}
+// 	}
+// 	static LARGE_INTEGER frequency;
+// 	if (!basetime.LowPart)
+// 	{
+// 		if (!QueryPerformanceFrequency(&frequency))
+// 			frequency.QuadPart = 0;
+// 		else
+// 			QueryPerformanceCounter(&basetime);
+// 	}
 
-	if (frequency.QuadPart)
-	{
-		LARGE_INTEGER currtime; // use only LowPart if high resolution counter is not available
+// 	if (frequency.QuadPart)
+// 	{
+// 		LARGE_INTEGER currtime; // use only LowPart if high resolution counter is not available
 
-		if (QueryPerformanceCounter(&currtime))
-		{
-			basetime.QuadPart = currtime.QuadPart - (tic * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / TICRATE / 100);
+// 		if (QueryPerformanceCounter(&currtime))
+// 		{
+// 			basetime.QuadPart = currtime.QuadPart - (tic * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / TICRATE / 100);
 
-			if (useAbsoluteFudge)
-			{
-				basetime.QuadPart = basetime.QuadPart * NEWTICRATE / frequency.QuadPart * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / NEWTICRATE / 100;
-			}
-		}
-	}
-	else if (pfntimeGetTime)
-	{
-		basetime.QuadPart = pfntimeGetTime() - (tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
+// 			if (useAbsoluteFudge)
+// 			{
+// 				basetime.QuadPart = basetime.QuadPart * NEWTICRATE / frequency.QuadPart * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / NEWTICRATE / 100;
+// 			}
+// 		}
+// 	}
+// 	else if (pfntimeGetTime)
+// 	{
+// 		basetime.QuadPart = pfntimeGetTime() - (tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
 
-		if (useAbsoluteFudge)
-		{
-			basetime.QuadPart = basetime.QuadPart * NEWTICRATE / 1000 * 1000 / NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
-		}
-	}
-}
+// 		if (useAbsoluteFudge)
+// 		{
+// 			basetime.QuadPart = basetime.QuadPart * NEWTICRATE / 1000 * 1000 / NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
+// 		}
+// 	}
+// }
 
 static void I_ShutdownTimer(void)
 {
@@ -2283,13 +2287,12 @@ static void I_ShutdownTimer(void)
 // I_GetTime
 // returns time in 1/TICRATE second tics
 //
-static int lastTimeFudge = -1;
-static Uint64 basetime;
+static Uint64 basetime = 0;
 // millisecond precision only
 int TimeFunction(int requested_frequency)
 {
-
-	Uint64 ticks = SDL_GetTicks();
+	// static Uint64 basetime = 0;
+		   Uint64 ticks = SDL_GetTicks();
 
 	if (!basetime)
 		basetime = ticks;
@@ -2320,28 +2323,28 @@ int TimeFunction(int requested_frequency)
 // Adjusts the timer to the given tic time. The timer is set as though this tic has just started plus a fudge between 0 and 100.
 // A fudge of 99 means that although the assigned tic is valid, we are very very close to the next tic
 //FOR LINUX
-static unsigned int starttickcount = 0;
-void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_frequency later
-{
-	//
-	// unsigned int oldTickCount = starttickcount;
-	// int64_t oldBaseTime = basetime;
+// static unsigned int starttickcount = 0;
+// void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_frequency later
+// {
+// 	//
+// 	// unsigned int oldTickCount = starttickcount;
+// 	// int64_t oldBaseTime = basetime;
 
-	tic = max(tic, SDL_GetTicks());
+// 	tic = max(tic, SDL_GetTicks());
 
-	if (starttickcount)
-	{
-		starttickcount = SDL_GetTicks() - (unsigned int)((UINT64)tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
-		if (useAbsoluteFudge)
-		{
-			starttickcount = starttickcount * NEWTICRATE / 1000 * 1000 * NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
-		}
-	}
-	if (useAbsoluteFudge)
-	{
-		basetime = basetime * NEWTICRATE / 1000 * 1000 / NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
-	}
-}
+// 	if (starttickcount)
+// 	{
+// 		starttickcount = SDL_GetTicks() - (unsigned int)((UINT64)tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
+// 		if (useAbsoluteFudge)
+// 		{
+// 			starttickcount = starttickcount * NEWTICRATE / 1000 * 1000 * NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
+// 		}
+// 	}
+// 	if (useAbsoluteFudge)
+// 	{
+// 		basetime = basetime * NEWTICRATE / 1000 * 1000 / NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
+// 	}
+// }
 
 
 

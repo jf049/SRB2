@@ -200,7 +200,7 @@ void CV_SaveVariables(FILE *f);
 void CV_SaveVars(UINT8 **p, boolean in_demo);
 
 #define CV_SaveNetVars(p) CV_SaveVars(p, false)
-void CV_LoadNetVars(UINT8 **p);
+void CV_LoadNetVars(UINT8 **p, boolean onlyIfChanged);
 
 #define CV_SaveDemoVars(p) CV_SaveVars(p, true)
 void CV_LoadDemoVars(UINT8 **p);

@@ -537,7 +537,6 @@ void S_StartSoundAtVolume(const void *origin_p, sfxenum_t sfx_id, INT32 volume)
 
 	if (S_SoundDisabled() || !sound_started)
 		return;
-
 	if (((simtic != targetsimtic - 1 && origin == listenmobj) || (origin != listenmobj && issimulation))) // local player sounds play immediately during simulations
 		return;
 
@@ -935,7 +934,6 @@ void S_UpdateSounds(void)
 			if (I_SoundIsPlaying(c->handle))
 			{
 				boolean isspatial = c->origin || c->isdetached;
-
 				// initialize parameters
 				volume = c->volume; // 8 bits internal volume precision
 				pitch = NORM_PITCH;
@@ -943,8 +941,8 @@ void S_UpdateSounds(void)
 
 				// check non-local sounds for distance clipping
 				//  or modify their params
-				if (isspatial &&
-					((c->origin != players[consoleplayer].mo) || (splitscreen && c->origin != players[secondarydisplayplayer].mo)))
+				if (isspatial && 
+					((c->origin && ((c->origin != players[consoleplayer].mo) ||	(splitscreen && c->origin != players[secondarydisplayplayer].mo)))))
 				{
 					fixed_t x, y, z;
 					const mobj_t *soundmobj = c->origin;

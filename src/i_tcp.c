@@ -193,6 +193,39 @@ typedef int socklen_t;
 #endif
 
 #ifndef NONET
+
+typedef struct {
+	boolean inUse;
+
+	UINT8* data;
+	int dataLength;
+
+	int time;
+	SOCKET_TYPE socket;
+	mysockaddr_t sockaddr;
+	int sockaddr_size;
+} DelayBuffer;
+
+#define NUMDELAYPACKETS 200
+DelayBuffer delayPackets[NUMDELAYPACKETS];
+tic_t nextSpikeTime = 0;
+tic_t nextSpikeDuration = 0;
+
+void SOCK_FlushDelayBuffers(boolean flushImmediate)
+{
+	int time = I_GetTime();
+
+	for (int i = 0; i < NUMDELAYPACKETS; i++) {
+		if (delayPackets[i].inUse && ((time - delayPackets[i].time) * 1000 / TICRATE >= cv_netdelay.value || flushImmediate)) {
+			sendto(delayPackets[i].socket, (char *)delayPackets[i].data, delayPackets[i].dataLength, 0, &delayPackets[i].sockaddr.any, delayPackets[i].sockaddr_size);
+			delayPackets[i].inUse = false;
+		}
+	}
+}
+
+
+
+
 static SOCKET_TYPE mysockets[MAXNETNODES+1] = {ERRSOCKET};
 static size_t mysocketses = 0;
 static int myfamily[MAXNETNODES+1] = {0};
@@ -677,35 +710,6 @@ static boolean SOCK_CanGet(void)
 #endif
 
 #ifndef NONET
-typedef struct {
-	boolean inUse;
-
-	UINT8* data;
-	int dataLength;
-
-	int time;
-	SOCKET_TYPE socket;
-	mysockaddr_t sockaddr;
-	int sockaddr_size;
-} DelayBuffer;
-
-#define NUMDELAYPACKETS 200
-DelayBuffer delayPackets[NUMDELAYPACKETS];
-tic_t nextSpikeTime = 0;
-tic_t nextSpikeDuration = 0;
-
-void SOCK_FlushDelayBuffers(boolean flushImmediate)
-{
-	int time = I_GetTime();
-
-	for (int i = 0; i < NUMDELAYPACKETS; i++) {
-		if (delayPackets[i].inUse && ((time - delayPackets[i].time) * 1000 / TICRATE >= cv_netdelay.value || flushImmediate)) {
-			sendto(delayPackets[i].socket, (char *)delayPackets[i].data, delayPackets[i].dataLength, 0, &delayPackets[i].sockaddr.any, delayPackets[i].sockaddr_size);
-			delayPackets[i].inUse = false;
-		}
-	}
-}
-
 static inline ssize_t SOCK_SendToAddr(SOCKET_TYPE socket, mysockaddr_t *sockaddr)
 {
 	socklen_t d4 = (socklen_t)sizeof(struct sockaddr_in);

@@ -102,7 +102,7 @@ static void Color2_OnChange(void);
 static void DummyConsvar_OnChange(void);
 static void SoundTest_OnChange(void);
 
-static void TimeFudge_OnChange(void);
+// static void TimeFudge_OnChange(void);
 
 static void Command_Savestate(void);
 static void Command_Loadstate(void);
@@ -387,6 +387,9 @@ consvar_t cv_mute = {"mute", "Off", CV_NETVAR|CV_CALL, CV_OnOff, Mute_OnChange, 
 
 consvar_t cv_sleep = {"cpusleep", "1", CV_SAVE, sleeping_cons_t, NULL, -1, NULL, NULL, 0, 0, NULL};
 
+
+
+
 consvar_t cv_simulate = { "sim", "Yes", 0, CV_YesNo, NULL, 0, NULL, NULL, 0, 0, NULL };
 
 static CV_PossibleValue_t simulateTics_cons_t[] = { {0, "MIN"}, {MAXSIMULATIONS - 1, "MAX"}, {0, NULL} };
@@ -413,14 +416,20 @@ consvar_t cv_netsmoothing = { "netsmoothing", "Off", 0, CV_OnOff, NULL, 0, NULL,
 
 consvar_t cv_netspikes = { "netspikes", "Off", 0, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL };
 
-static CV_PossibleValue_t netvariabletime_cons_t[] = { {-1, "MIN"}, {100, "MAX"}, {0, NULL} };
-consvar_t cv_netvariabletime = { "netvariabletime", "-1", 0, netvariabletime_cons_t, NULL, -1, NULL, NULL, 0, 0, NULL };
+// static CV_PossibleValue_t netvariabletime_cons_t[] = { {-1, "MIN"}, {100, "MAX"}, {0, NULL} };
+// consvar_t cv_netvariabletime = { "netvariabletime", "-1", 0, netvariabletime_cons_t, NULL, -1, NULL, NULL, 0, 0, NULL };
 
 static CV_PossibleValue_t debugsimulaterewind_cons_t[] = { {0, "MIN"}, {BACKUPTICS - 1, "MAX"}, {0, NULL} };
 consvar_t cv_debugsimulaterewind = { "debugsimulaterewind", "0", 0, debugsimulaterewind_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL };
 
 static CV_PossibleValue_t timefudge_cons_t[] = { {0, "MIN"}, {100, "MAX"}, {0, NULL} };
-consvar_t cv_timefudge = { "timefudge", "0", CV_CALL, timefudge_cons_t, TimeFudge_OnChange, 0, NULL, NULL, 0, 0, NULL };
+consvar_t cv_timefudge = { "timefudge", "0", 0, timefudge_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL };
+// consvar_t cv_timefudge = { "timefudge", "0", CV_CALL, timefudge_cons_t, TimeFudge_OnChange, 0, NULL, NULL, 0, 0, NULL };
+
+// consvar_t cv_fixaim = { "fixaim", "Yes", 0, CV_YesNo, NULL, 0, NULL, NULL, 0, 0, NULL };
+
+
+
 
 char timedemo_name[256];
 boolean timedemo_csv;
@@ -545,7 +554,8 @@ void D_RegisterServerCommands(void)
 	COM_AddCommand("togglemodified", Command_Togglemodified_f);
 	COM_AddCommand("archivetest", Command_Archivetest_f);
 #endif
-	// experimental load/save game state for possible rewinding in netgames
+
+// experimental load/save game state for possible rewinding in netgames
 	COM_AddCommand("savestate", Command_Savestate);
 	COM_AddCommand("loadstate", Command_Loadstate);
 	COM_AddCommand("rewind", Command_Rewind);
@@ -564,7 +574,12 @@ void D_RegisterServerCommands(void)
 	CV_RegisterVar(&cv_timefudge);
 	CV_RegisterVar(&cv_nettrails);
 	CV_RegisterVar(&cv_netslingdelay);
-	CV_RegisterVar(&cv_netvariabletime);
+	// CV_RegisterVar(&cv_netvariabletime);
+
+	// COM_AddCommand("fixaim", Command_Fixaim);
+
+
+
 	COM_AddCommand("downloads", Command_Downloads_f);
 
 	// for master server connection
@@ -909,8 +924,8 @@ void D_RegisterClientCommands(void)
 #endif
 	CV_RegisterVar(&cv_rollingdemos);
 	CV_RegisterVar(&cv_netstat);
-	CV_RegisterVar(&cv_netsimstat);
 	CV_RegisterVar(&cv_netticbuffer);
+	CV_RegisterVar(&cv_netsimstat);
 
 #ifdef NETGAME_DEVMODE
 	CV_RegisterVar(&cv_fishcake);
@@ -3822,8 +3837,8 @@ void ItemFinder_OnChange(void)
   * \sa cv_pointlimit, TimeLimit_OnChange
   * \author Graue <graue@oceanbase.org>
   */
-static int lastpointlimit;
 
+static int lastpointlimit;
 static void PointLimit_OnChange(void)
 {
 	// Don't allow pointlimit in Single Player/Co-Op/Race!
@@ -3844,7 +3859,7 @@ static void PointLimit_OnChange(void)
 				cv_pointlimit.value > 1 ? "s" : "");
 		}
 		else if (netgame || multiplayer)
-			CONS_Printf(M_GetText("Point limit disabled\n"));
+		CONS_Printf(M_GetText("Point limit disabled\n"));
 	}
 
 	lastpointlimit = cv_pointlimit.value;
@@ -4009,19 +4024,31 @@ static void TimeLimit_OnChange(void)
 
 	if (cv_timelimit.value != 0)
 	{
+		UINT32 newtimelimit = cv_timelimit.value * 60 * TICRATE;
+
 		CONS_Printf(M_GetText("Levels will end after %d minute%s.\n"),cv_timelimit.value,cv_timelimit.value == 1 ? "" : "s"); // Graue 11-17-2003
 		timelimitintics = cv_timelimit.value * 60 * TICRATE;
 
 		//add hidetime for tag too!
 		if (G_TagGametype())
-			timelimitintics += hidetime * TICRATE;
+		newtimelimit += hidetime * TICRATE;
+
+		if (newtimelimit != timelimitintics)
+		{
+			CONS_Printf(M_GetText("Levels will end after %d minute%s.\n"), cv_timelimit.value, cv_timelimit.value == 1 ? "" : "s"); // Graue 11-17-2003
+
+			timelimitintics = newtimelimit; // ...and slightly modified by LX 12-11-2019 <3
+		}
 
 		// Note the deliberate absence of any code preventing
 		//   pointlimit and timelimit from being set simultaneously.
 		// Some people might like to use them together. It works.
 	}
 	else if (netgame || multiplayer)
+	{
+		timelimitintics = 0;
 		CONS_Printf(M_GetText("Time limit disabled\n"));
+	}
 }
 
 /** Adjusts certain settings to match a changed gametype.
@@ -4216,10 +4243,10 @@ static void SoundTest_OnChange(void)
 	S_StartSound(NULL, cv_soundtest.value);
 }
 
-static void TimeFudge_OnChange(void)
-{
-	I_SetTime(I_GetTime(), cv_timefudge.value, true);
-}
+// static void TimeFudge_OnChange(void)
+// {
+// 	I_SetTime(I_GetTime(), cv_timefudge.value, true);
+// }
 
 static void AutoBalance_OnChange(void)
 {

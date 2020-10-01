@@ -5161,3 +5161,4 @@ INT32 G_TicsToMilliseconds(tic_t tics)
 {
 	return (INT32)((tics%TICRATE) * (1000.00f/TICRATE));
 }
+

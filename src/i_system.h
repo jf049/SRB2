@@ -56,7 +56,7 @@ UINT64 I_GetTimeUs(void);
 		   If absolute fudge is false, the time fudge is relative to the time at call. e.g. if tic is set to the current tic and fudge 50, it'll be half a tic until the next tic
 		   Time is never allowed to go backwards--this can cause a freeze. If the possibility of time going backwards is detected, the time will be clamped.
 */
-void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge);
+// void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge);
 
 int I_GetTimeMicros(void);// provides microsecond counter for render stats
 

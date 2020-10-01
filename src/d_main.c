@@ -69,6 +69,7 @@
 #include "g_input.h" // tutorial mode control scheming
 #include "i_net.h" // for netvariabletime (srb2netplus)
 
+
 #ifdef CMAKECONFIG
 #include "config.h"
 #else
@@ -100,7 +101,7 @@ UINT8 window_notinfocus = false;
 // DEMO LOOP
 //
 static char *startupwadfiles[MAX_WADFILES];
-
+extern char netDebugText[10000];
 boolean devparm = false; // started game with -devparm
 
 boolean singletics = false; // timedemo
@@ -136,8 +137,6 @@ char srb2path[256] = ".";
 boolean usehome = true;
 const char *pandf = "%s" PATHSEP "%s";
 static char addonsdir[MAX_WADPATH];
-
-extern char netDebugText[10000];
 
 //
 // EVENT HANDLING
@@ -633,6 +632,26 @@ static void D_Display(void)
 			snprintf(s, sizeof s - 1, "SysMiss %.2f%%", lostpercent);
 			V_DrawRightAlignedString(BASEVIDWIDTH, BASEVIDHEIGHT-ST_HEIGHT-10, V_YELLOWMAP, s);
 		}
+		if (cv_netsimstat.value && netDebugText[0] != 0)
+		{
+			const char* str = netDebugText;
+			int y = 0;
+
+			while (str != NULL)
+			{
+				char temp[1024];
+				const char* nextStr = strstr(str + 1, "\n");
+				int len = nextStr ? nextStr - str : strlen(str);
+
+				memcpy(temp, str, len);
+				temp[len] = 0;
+
+				V_DrawRightAlignedSmallString(BASEVIDWIDTH, y, V_YELLOWMAP, temp);
+
+				y += 5;
+				str = nextStr ? nextStr + 1 : NULL;
+			}
+		}
 
 		if (cv_renderstats.value)
 		{
@@ -718,28 +737,6 @@ static void D_Display(void)
 		rs_swaptime = I_GetTimeMicros();
 		I_FinishUpdate(); // page flip or blit buffer
 		rs_swaptime = I_GetTimeMicros() - rs_swaptime;
-
-		if (cv_netsimstat.value && netDebugText[0] != 0)
-		{
-			const char* str = netDebugText;
-			int y = 0;
-
-			while (str != NULL)
-			{
-				char temp[1024];
-				const char* nextStr = strstr(str + 1, "\n");
-				int len = nextStr ? nextStr - str : strlen(str);
-
-				memcpy(temp, str, len);
-				temp[len] = 0;
-
-				V_DrawRightAlignedSmallString(BASEVIDWIDTH, y, V_YELLOWMAP, temp);
-
-				y += 5;
-				str = nextStr ? nextStr + 1 : NULL;
-			}
-		}
-
 	}
 
 	needpatchflush = false;
@@ -768,6 +765,7 @@ void D_CheckRendererState(void)
 // =========================================================================
 
 tic_t rendergametic;
+
 boolean hasAckedPackets = false;
 
 void D_SRB2Loop(void)
@@ -798,9 +796,9 @@ void D_SRB2Loop(void)
 	// Use this as the border between setup and the main game loop being entered.
 	CONS_Printf(
 	"===========================================================================\n"
-	"                         I hope you'll beat the shit of\n"
-	"                     everyone you are going to play against!\n"
-	"                                ...wait. =P\n"
+	"                   We hope you enjoy this game as\n"
+	"                     much as we did making it!\n"
+	"                            ...wait. =P\n"
 	"===========================================================================\n");
 
 	// hack to start on a nice clear console screen.
@@ -828,23 +826,23 @@ void D_SRB2Loop(void)
 			lastwipetic = 0;
 		}
 
-		if (cv_netvariabletime.value != -1)
-		{
-			if (gamestate == GS_LEVEL && consoleplayer != 0)
-			{
-				if (I_NetCanGet() && !hasAckedPackets)
-				{
-					I_SetTime(max(I_GetTime(), oldentertics + 1), 0, false); // we just got a packet, execute it asap!
-					hasAckedPackets = true;
-				}
-				else if (!I_NetCanGet() && I_GetTime() - oldentertics < 2)
-				{
-					// wait a bit longer for a packet
-					I_Sleep();
-					continue;
-				}
-			}
-		}
+		// if (cv_netvariabletime.value != -1)
+		// 		{
+		// 			if (gamestate == GS_LEVEL && consoleplayer != 0)
+		// 			{
+		// 				if (I_NetCanGet() && !hasAckedPackets)
+		// 				{
+		// 					I_SetTime(max(I_GetTime(), oldentertics + 1), 0, false); // we just got a packet, execute it asap!
+		// 					hasAckedPackets = true;
+		// 				}
+		// 				else if (!I_NetCanGet() && I_GetTime() - oldentertics < 2)
+		// 				{
+		// 					// wait a bit longer for a packet
+		// 					I_Sleep();
+		// 					continue;
+		// 				}
+		// 			}
+		// 		}
 
 		// get real tics
 		entertic = I_GetTime();

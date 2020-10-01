@@ -59,7 +59,7 @@ static boolean con_started = false; // console has been initialised
        boolean con_startup = false; // true at game startup, screen need refreshing
 static boolean con_forcepic = true; // at startup toggle console translucency when first off
        boolean con_recalc;          // set true when screen size has changed
-       boolean con_muted = false;
+	   boolean con_muted = false;   //mute the consone (usually when simulating the gamestate)
 
 static tic_t con_tick; // console ticker for anim or blinking prompt cursor
                         // con_scrollup should use time (currenttime - lasttime)..

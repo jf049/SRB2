@@ -12610,6 +12610,7 @@ static boolean P_SetupSpawnedMapThing(mapthing_t *mthing, mobj_t *mobj, boolean 
 			skyboxcenterpnts[mthing->tag] = mobj;
 		else
 			skyboxviewpnts[mthing->tag] = mobj;
+		mobj->extravalue2 = (mthing->extrainfo & 0xFFFF) | ((mthing->options & MTF_OBJECTSPECIAL) != 0); // needed for reloading map objs
 		break;
 	case MT_EGGSTATUE:
 		if (mthing->options & MTF_EXTRA)
@@ -13523,6 +13524,13 @@ mobj_t *P_SpawnXYZMissile(mobj_t *source, mobj_t *dest, mobjtype_t type,
 
 	th = P_SpawnMobj(x, y, z, type);
 
+	if (cv_netslingdelay.value && issimulation && (tic_t)cv_netsteadyplayers.value >= targetsimtic - simtic && source == players[consoleplayer].mo)
+		{
+			z = 0x80000000; // don't make rings appear when using netslingdelay
+			th->flags |= MF_NOTHINK;
+			th->sprite = SPR_NULL;
+		}
+
 	if (source->eflags & MFE_VERTICALFLIP)
 		th->flags2 |= MF2_OBJECTFLIP;
 
@@ -13820,13 +13828,6 @@ mobj_t *P_SPMAngle(mobj_t *source, mobjtype_t type, angle_t angle, UINT8 allowai
 		z = source->z + source->height/3;
 
 	th = P_SpawnMobj(x, y, z, type);
-
-	if (cv_netslingdelay.value && issimulation && (tic_t)cv_netsteadyplayers.value >= targetsimtic - simtic && source == players[consoleplayer].mo)
-	{
-		z = 0x80000000; // don't make rings appear when using netslingdelay
-		th->flags |= MF_NOTHINK;
-		th->sprite = SPR_NULL;
-	}
 
 	if (source->eflags & MFE_VERTICALFLIP)
 		th->flags2 |= MF2_OBJECTFLIP;
