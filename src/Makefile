@@ -1,5 +1,3 @@
-CFLAGS=-fcommon
-CFLAGS=-fcommon
 
 #     GNU Make makefile for SRB2
 #############################################################################
