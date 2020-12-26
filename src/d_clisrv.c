@@ -64,8 +64,6 @@
 //   firstticstosend is used to optimize a condition
 // Normally maketic >= gametic > 0
 
-#define PREDICTIONQUEUE BACKUPTICS
-#define PREDICTIONMASK (PREDICTIONQUEUE-1)
 #define MAX_REASONLENGTH 30
 
 boolean server = true; // true or false but !server == client
@@ -155,6 +153,7 @@ tic_t DecodeTiccmdTime(const ticcmd_t* ticcmd);
 static void AdjustSimulatedTiccmdInputs(ticcmd_t* cmds);
 
 static void RunSimulations();
+// Net simulation stuff END
 
 
 // engine
@@ -3889,7 +3888,6 @@ void D_QuitNetGame(void)
 	}
 
 	SOCK_FlushDelayBuffers(true);
-
 	D_CloseConnection();
 	ClearAdminPlayers();
 
@@ -5197,8 +5195,7 @@ static void CL_SendClientCmd(void)
 		ticcmd_t adjustedCmd = localcmds;
 		AdjustSimulatedTiccmdInputs(&adjustedCmd); // adjust ticcmds for simulations
 
-		//G_MoveTiccmd(&netbuffer->u.clientpak.cmd, &localcmds, 1);
-		G_MoveTiccmd(&netbuffer->u.clientpak.cmd, &adjustedCmd, 1);
+		G_MoveTiccmd(&netbuffer->u.clientpak.cmd, &localcmds, 1);
 		netbuffer->u.clientpak.consistancy = SHORT(consistancy[gametic%BACKUPTICS]);
 
 		// Send a special packet with 2 cmd for splitscreen
@@ -5354,6 +5351,7 @@ static void SV_SendTics(void)
 	supposedtics[0] = maketic;
 }
 
+//Makes ticcmd in a proper way so that objects won't get wonky
 void EncodeTiccmdTime(ticcmd_t* ticcmd, tic_t time)
 {
 #ifdef ENCODE_TICCMD_TIMES
@@ -5398,12 +5396,13 @@ fixed_t FixedDistance2(fixed_t aX, fixed_t aY, fixed_t bX, fixed_t bY)
 
 static ticcmd_t lastCmds;
 
+//autoaim stuff
 void CorrectPlayerTargeting(ticcmd_t* cmds)
 {
 	if (!players[consoleplayer].mo || !cv_netsteadyplayers.value || simtic == gametic)
 		return;
 
-	boolean hasPressedAttack = (cmds->buttons & BT_ATTACK) && (!(lastCmds.buttons & BT_ATTACK) 
+	boolean hasPressedAttack = (cmds->buttons & BT_ATTACK) && (!(lastCmds.buttons & BT_ATTACK)
 							|| (players[consoleplayer].currentweapon == WEP_AUTO && players[consoleplayer].rings > 0));
 
 	if (hasPressedAttack)
@@ -5446,7 +5445,7 @@ void CorrectPlayerTargeting(ticcmd_t* cmds)
 				fixed_t distanceRatio = FixedDiv(FixedDistance(myself->x, myself->y, myself->z, simX, simY, simZ), FixedDistance(myself->x, myself->y, myself->z, curX, curY, curZ));
 
 				cmds->angleturn = (INT16)(FixedAngleBetween(myself->x, myself->y, simX, simY) >> FRACBITS) - FixedDiv(smallestDifference, distanceRatio);
-				cmds->aiming = -(INT16)(FixedAngleBetween(0, simZ, FixedDistance2(simX, simY, myself->x, myself->y), myself->z) >> FRACBITS) - 
+				cmds->aiming = -(INT16)(FixedAngleBetween(0, simZ, FixedDistance2(simX, simY, myself->x, myself->y), myself->z) >> FRACBITS) -
 										FixedDiv(smallestVDifference, distanceRatio);
 			}
 			else
@@ -5547,7 +5546,7 @@ static void Local_Maketic(INT32 realtics)
 	if (splitscreen || botingame)
 		G_BuildTiccmd(&localcmds2, realtics, 2);
 
-	EncodeTiccmdTime(&localcmds, I_GetTime());
+	EncodeTiccmdTime(&localcmds, I_GetTime()); //encode ticks for simulatios
 
 	localcmds.angleturn |= TICCMD_RECEIVED;
 	localcmds2.angleturn |= TICCMD_RECEIVED;
@@ -5590,6 +5589,7 @@ static void SV_Maketic(void)
 	// all tic are now proceed make the next
 	maketic++;
 }
+
 
 // Overview for the new programmer and the programmer who probably isn't new, but doesn't have a clue what his code does becuase he didn't comment it ;)
 // oh dayum did I just get called out by my old comment
@@ -5648,6 +5648,7 @@ void TryRunTics(tic_t realtics)
 	}
 
 	// Get packets from the server
+	//TODO: remove these 1000000s 
 	unsigned long long int frame = (I_GetTimeUs() * NEWTICRATE / 1000000);
 	netUpdateFudge = (I_GetTimeUs() - frame * 1000000 / NEWTICRATE) * 100 * NEWTICRATE / 1000000; // record the timefudge where the net update typically occurs
 
@@ -5706,7 +5707,6 @@ void TryRunTics(tic_t realtics)
 		localTicBuffer[(liveTic - i) % BACKUPTICS] = localcmds;
 
 	// Run the real game as received from the server
-
 	if (neededtic > gametic && !resynch_local_inprogress)
 	{
 		if (advancedemo)
@@ -5719,32 +5719,31 @@ void TryRunTics(tic_t realtics)
 		else
 		{
 			// Load the real state if it exists
-			if (simtic != gametic && gameStateBufferIsValid[gametic % BACKUPTICS])
+			if (simtic != gametic && gameStateBufferIsValid[gametic % BACKUPTICS] == true)
 			{
 				P_LoadGameState(&gameStateBuffer[gametic % BACKUPTICS]);
-
-				if (Consistancy() != consistancy[gametic%BACKUPTICS])
+				if (Consistancy() != consistancy[gametic % BACKUPTICS])
 					CONS_Printf("oops, consistency error, even I got that one!\n");
 			}
 			else if (simtic != gametic && !gameStateBufferIsValid[gametic % BACKUPTICS])
 				CONS_Printf("Problem: game state buffer inaccessible but a simulation happened!!\n");
 
-			// run the count * tics
+			// run the tics up to the real game tic
 			while (neededtic > gametic)
 			{
 				DEBFILE(va("============ Running tic %d (local %d)\n", gametic, localgametic));
-				targetsimtic = gametic + 1;
-
-				rs_tictime = I_GetTimeMicros();
 				
+				rs_tictime = I_GetTimeMicros();
+
+				targetsimtic = gametic + 1;
 
 				G_Ticker((gametic % NEWTICRATERATIO) == 0);
 				ExtraDataTicker();
 				gametic++;
-				simtic = gametic;
-				consistancy[gametic%BACKUPTICS] = Consistancy();
+				simtic = gametic; // game state is reset, we wanna resimulate from here
 
-				rs_tictime = I_GetTimeMicros() - rs_tictime;
+				consistancy[gametic % BACKUPTICS] = Consistancy();
+
 				if (recordingStates)
 				{
 					// store this real state
@@ -5757,12 +5756,15 @@ void TryRunTics(tic_t realtics)
 						gameTicBuffer[gametic % BACKUPTICS][i] = netcmds[(gametic - 1) % BACKUPTICS][i];
 				}
 
+				rs_tictime = I_GetTimeMicros() - rs_tictime;
+
 				// Leave a certain amount of tics present in the net buffer as long as we've ran at least one tic this frame.
-				// if (client && gamestate == GS_LEVEL && leveltime > 3 && neededtic <= gametic + cv_netticbuffer.value)
-				// 	break;
+				if (client && gamestate == GS_LEVEL && leveltime > 3 && neededtic <= gametic + cv_netticbuffer.value)
+					break;
 			}
 		}
 	}
+
 	// Smooth out the game state according to the network
 	// \todo rather than re-loading an older state, we could just buffer the tics instead of running them above
 	if (cv_netsmoothing.value)
@@ -5786,6 +5788,7 @@ void TryRunTics(tic_t realtics)
 
 	// we're gonna need more debugs...
 	MakeNetDebugString();
+
 }
 
 UINT64 simStartTime;
@@ -5874,7 +5877,7 @@ static void RunSimulations()
 			}
 		}
 	}
-// simulate the rest o da future
+	// simulate the rest o da future
 	issimulation = true;
 	con_muted = true;
 
@@ -6029,9 +6032,15 @@ void InvalidateSavestates()
 	if (simtic > gametic)
 		CONS_Printf("Warning: Savestates were invalidated during a simulation!!\n");
 
-	for (int i = 0; i < MAXSIMULATIONS; i++)
+	for (int i = 0; i < BACKUPTICS; i++)
+	{
+		if (gameStateBufferIsValid[i] == true)
+			if (&gameStateBuffer[i].buffer != NULL)
+			{
+				P_GameStateFreeMemory(&gameStateBuffer[i]);
+			}
 		gameStateBufferIsValid[i] = false;
-
+	}
 	lastSavestateClearedTic = gametic;
 }
 
@@ -6093,7 +6102,7 @@ void DetermineNetConditions()
 	rttJitter = maxRTT - minRTT;
 
 	// stable server conditions? (but not just a big lag spike?)
-	if (rttJitter <= 2 && maxRTT < BACKUPTICS - 1)
+	if (rttJitter <= 2 && maxRTT < BACKUPTICS - 1) //TODO
 	{
 		// we know roughly how much we should simulate then!
 		recommendedSimulateTics = maxRTT + 1;
@@ -6108,7 +6117,7 @@ static void PerformDebugRewinds()
 
 		for (int i = 0; i < rewindingTarget; i++)
 		{
-			netcmds[gametic%BACKUPTICS][consoleplayer] = gameTicBuffer[(gametic - rewindingTarget + i) % BACKUPTICS][consoleplayer];
+			netcmds[gametic % BACKUPTICS][consoleplayer] = gameTicBuffer[(gametic - rewindingTarget + i) % BACKUPTICS][consoleplayer];
 			G_Ticker(true);
 		}
 
@@ -6127,9 +6136,6 @@ static void PerformDebugRewinds()
 			CONS_Printf("General consistency error...\n");
 	}
 }
-
-extern UINT32 saveTimes[12];
-extern UINT32 loadTimes[12];
 
 void MakeNetDebugString()
 {

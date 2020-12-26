@@ -9457,6 +9457,9 @@ static const char *const MENUTYPES_LIST[] = {
 	"OP_SCREENSHOTS",
 	"OP_ERASEDATA",
 
+	//Netplus options menu
+	"OP_NETPLUS",
+
 	// Extras
 	"SR_MAIN",
 	"SR_PANDORA",

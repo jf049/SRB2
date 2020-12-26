@@ -48,6 +48,12 @@ static mobj_t *overlaycap = NULL;
 
 UINT32 globalmobjnum = 0; // this should never overflow, but 4 billion would be an impressive number to reach. \todo ensure this never happens
 
+boolean P_IsProjectile(mobjtype_t type)
+{
+	return type == MT_THROWNBOUNCE || type == MT_THROWNINFINITY || type == MT_THROWNAUTOMATIC || type == MT_THROWNSCATTER
+		|| type == MT_THROWNEXPLOSION || type == MT_THROWNGRENADE || type == MT_REDRING;
+}
+
 void P_InitCachedActions(void)
 {
 	actioncachehead.prev = actioncachehead.next = &actioncachehead;
@@ -689,12 +695,6 @@ boolean P_WeaponOrPanel(mobjtype_t type)
 		return true;
 
 	return false;
-}
-
-boolean P_IsProjectile(mobjtype_t type)
-{
-	return type == MT_THROWNBOUNCE || type == MT_THROWNINFINITY || type == MT_THROWNAUTOMATIC || type == MT_THROWNSCATTER
-		|| type == MT_THROWNEXPLOSION || type == MT_THROWNGRENADE || type == MT_REDRING;
 }
 
 //
@@ -11053,17 +11053,12 @@ void P_RemoveSavegameMobj(mobj_t *mobj, boolean preserveLevel)
 	{
 		S_StopSound(mobj);
 	}
-	else
-	{
-		// detach any playing sounds from this mobj, but don't destroy them as they might still be there
-		S_DetachChannelsFromOrigin(mobj);
-	}
 
 	// free block
 	P_RemoveThinker((thinker_t *)mobj);
 }
 
-static CV_PossibleValue_t respawnitemtime_cons_t[] = {{1, "MIN"}, {300, "MAX"}, {0, NULL}};
+static CV_PossibleValue_t respawnitemtime_cons_t[] = {{1, "MIN"}, {300, "MAX"}, {0, NULL}};	
 consvar_t cv_itemrespawntime = {"respawnitemtime", "30", CV_NETVAR|CV_CHEAT, respawnitemtime_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_itemrespawn = {"respawnitem", "On", CV_NETVAR, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
 static CV_PossibleValue_t flagtime_cons_t[] = {{0, "MIN"}, {300, "MAX"}, {0, NULL}};
@@ -13524,13 +13519,6 @@ mobj_t *P_SpawnXYZMissile(mobj_t *source, mobj_t *dest, mobjtype_t type,
 
 	th = P_SpawnMobj(x, y, z, type);
 
-	if (cv_netslingdelay.value && issimulation && (tic_t)cv_netsteadyplayers.value >= targetsimtic - simtic && source == players[consoleplayer].mo)
-		{
-			z = 0x80000000; // don't make rings appear when using netslingdelay
-			th->flags |= MF_NOTHINK;
-			th->sprite = SPR_NULL;
-		}
-
 	if (source->eflags & MFE_VERTICALFLIP)
 		th->flags2 |= MF2_OBJECTFLIP;
 
@@ -13828,6 +13816,13 @@ mobj_t *P_SPMAngle(mobj_t *source, mobjtype_t type, angle_t angle, UINT8 allowai
 		z = source->z + source->height/3;
 
 	th = P_SpawnMobj(x, y, z, type);
+
+	if (cv_netslingdelay.value && issimulation && (tic_t)cv_netsteadyplayers.value >= targetsimtic - simtic && source == players[consoleplayer].mo)
+	{
+		z = 0x80000000; // don't make rings appear when using netslingdelay, teleport them somewhere else
+		th->flags |= MF_NOTHINK;
+		th->sprite = SPR_NULL;
+	}
 
 	if (source->eflags & MFE_VERTICALFLIP)
 		th->flags2 |= MF2_OBJECTFLIP;

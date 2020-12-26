@@ -16,7 +16,7 @@
 #define __D_NETCMD__
 
 #include "command.h"
-
+void Command_Autotimefudge(void);
 // console vars
 extern consvar_t cv_playername;
 extern consvar_t cv_playercolor;
@@ -76,7 +76,6 @@ extern consvar_t cv_scrambleonchange;
 
 extern consvar_t cv_netstat;
 extern consvar_t cv_netsimstat;
-
 #ifdef WALLSPLATS
 extern consvar_t cv_splats;
 #endif
@@ -123,7 +122,7 @@ extern consvar_t cv_debugsimulaterewind;
 extern consvar_t cv_timefudge;
 extern consvar_t cv_nettrails;
 extern consvar_t cv_netslingdelay;
-// extern consvar_t cv_netvariabletime;
+extern consvar_t cv_netvariabletime;
 
 
 extern consvar_t cv_skipmapcheck;
@@ -226,4 +225,5 @@ void D_SetPassword(const char *pw);
 // used for the player setup menu
 UINT8 CanChangeSkin(INT32 playernum);
 
+//for netplus options menu
 #endif

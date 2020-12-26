@@ -21,11 +21,24 @@
 // Persistent storage/archiving.
 // These are the load / save game routines.
 
+extern char netDebugText[10000];
+
+typedef struct
+{
+	UINT8* buffer;
+} savestate_t;
+
 void P_SaveGame(INT16 mapnum);
 void P_SaveNetGame(void);
+void P_SaveGameState(savestate_t* savestate);
+void P_GameStateFreeMemory(savestate_t* savestate);
 boolean P_LoadGame(INT16 mapoverride);
+boolean P_LoadNetGame(boolean preserveLevel);
+boolean P_LoadGameState(const savestate_t* savestate);
 
 mobj_t *P_FindNewPosition(UINT32 oldposition);
+
+
 
 typedef struct
 {
@@ -37,21 +50,6 @@ typedef struct
 	UINT16 emeralds;
 	UINT8 numgameovers;
 } savedata_t;
-
-typedef struct
-{
-	UINT8* buffer;
-} savestate_t;
-
-// Persistent storage/archiving.
-// These are the load / save game routines.
-
-void P_SaveGameState(savestate_t* savestate);
-boolean P_LoadGame(INT16 mapoverride);
-boolean P_LoadNetGame(boolean preserveLevel);
-boolean P_LoadGameState(const savestate_t* savestate);
-
-mobj_t *P_FindNewPosition(UINT32 oldposition);
 
 extern savedata_t savedata;
 extern UINT8 *save_p;

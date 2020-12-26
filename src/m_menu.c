@@ -256,6 +256,7 @@ static void M_ConfirmTeamChange(INT32 choice);
 static void M_SecretsMenu(INT32 choice);
 static void M_SetupChoosePlayer(INT32 choice);
 static UINT8 M_SetupChoosePlayerDirect(INT32 choice);
+static void M_NetPlusOptions(INT32 choice); //NetPlus options menu
 static void M_QuitSRB2(INT32 choice);
 menu_t SP_MainDef, OP_MainDef;
 menu_t MISC_ScrambleTeamDef, MISC_ChangeTeamDef;
@@ -345,6 +346,9 @@ static void M_Addons(INT32 choice);
 static void M_AddonsOptions(INT32 choice);
 static patch_t *addonsp[NUM_EXT+5];
 
+//NetPlus settings menu
+menu_t OP_NetPlusDef;
+
 #define addonmenusize 9 // number of items actually displayed in the addons menu view, formerly (2*numaddonsshown + 1)
 #define numaddonsshown 4 // number of items to each side of the currently selected item, unless at top/bottom ends of directory
 
@@ -403,12 +407,10 @@ static void M_HandleSetupMultiPlayer(INT32 choice);
 static void M_HandleVideoMode(INT32 choice);
 
 static void M_ResetCvars(void);
-
+//for NetPlus options menu 
+static void M_NetPlusAutoTimeFudge(void);
 // Consvar onchange functions
 static void Newgametype_OnChange(void);
-#ifdef HWRENDER
-static void Newrenderer_OnChange(void);
-#endif
 static void Dummymares_OnChange(void);
 
 // ==========================================================================
@@ -432,11 +434,6 @@ consvar_t cv_chooseskin = {"chooseskin", DEFAULTSKIN, CV_HIDEN|CV_CALL, skins_co
 CV_PossibleValue_t gametype_cons_t[NUMGAMETYPES+1];
 
 consvar_t cv_newgametype = {"newgametype", "Co-op", CV_HIDEN|CV_CALL, gametype_cons_t, Newgametype_OnChange, 0, NULL, NULL, 0, 0, NULL};
-
-#ifdef HWRENDER
-consvar_t cv_newrenderer = {"newrenderer", "Software", CV_HIDEN|CV_CALL, cv_renderer_t, Newrenderer_OnChange, 0, NULL, NULL, 0, 0, NULL};
-static int newrenderer_set = 1;/* Software doesn't need confirmation! */
-#endif
 
 static CV_PossibleValue_t serversort_cons_t[] = {
 	{0,"Ping"},
@@ -502,17 +499,19 @@ consvar_t cv_dummyloadless = {"dummyloadless", "In-game", CV_HIDEN, loadless_con
 // ---------
 // Main Menu
 // ---------
-static menuitem_t MainMenu[] =
+static menuitem_t MainMenu[] = // Positions change when unlocking Secret menu!
 {
-	{IT_STRING|IT_CALL,    NULL, "1  Player",   M_SinglePlayerMenu,      76},
+	{IT_STRING|IT_CALL,    NULL, "1  Player",   M_SinglePlayerMenu,      68},
 #ifndef NONET
-	{IT_STRING|IT_SUBMENU, NULL, "Multiplayer", &MP_MainDef,             84},
+	{IT_STRING|IT_SUBMENU, NULL, "Multiplayer", &MP_MainDef,             76},
 #else
-	{IT_STRING|IT_CALL,    NULL, "Multiplayer", M_StartSplitServerMenu,  84},
+	{IT_STRING|IT_CALL,    NULL, "Multiplayer", M_StartSplitServerMenu,  76},
 #endif
-	{IT_STRING|IT_CALL,    NULL, "Extras",      M_SecretsMenu,           92},
-	{IT_CALL   |IT_STRING, NULL, "Addons",      M_Addons,               100},
-	{IT_STRING|IT_CALL,    NULL, "Options",     M_Options,              108},
+	{IT_STRING|IT_CALL,    NULL, "Extras",      M_SecretsMenu,           84},
+	{IT_CALL   |IT_STRING, NULL, "Addons",      M_Addons,                92},
+	{IT_STRING|IT_CALL,    NULL, "Options",     M_Options,              100},
+	//NetPlus options menu
+	{IT_STRING|IT_CALL,    NULL, "NetPlus Options",M_NetPlusOptions,    108},
 	{IT_STRING|IT_CALL,    NULL, "Quit  Game",  M_QuitSRB2,             116},
 };
 
@@ -569,9 +568,10 @@ static menuitem_t MPauseMenu[] =
 	{IT_STRING | IT_SUBMENU, NULL, "Switch Team...",            &MISC_ChangeTeamDef,   48},
 	{IT_STRING | IT_CALL,    NULL, "Player Setup",              M_SetupMultiPlayer,    56}, // alone
 	{IT_STRING | IT_CALL,    NULL, "Options",                   M_Options,             64},
+	{IT_STRING | IT_CALL,    NULL, "NetPlus Options",			M_NetPlusOptions,      72},
 
-	{IT_STRING | IT_CALL,    NULL, "Return to Title",           M_EndGame,             80},
-	{IT_STRING | IT_CALL,    NULL, "Quit Game",                 M_QuitSRB2,            88},
+	{IT_STRING | IT_CALL,    NULL, "Return to Title",           M_EndGame,             88},
+	{IT_STRING | IT_CALL,    NULL, "Quit Game",                 M_QuitSRB2,            96},
 };
 
 typedef enum
@@ -1347,7 +1347,7 @@ static menuitem_t OP_VideoOptionsMenu[] =
 #endif
 	{IT_STRING | IT_CVAR, NULL, "Vertical Sync",                &cv_vidwait,         16},
 #ifdef HWRENDER
-	{IT_STRING | IT_CVAR, NULL, "Renderer",                     &cv_newrenderer,        21},
+	{IT_STRING | IT_CVAR, NULL, "Renderer",                     &cv_renderer,        21},
 #else
 	{IT_TRANSTEXT | IT_PAIR, "Renderer", "Software",            &cv_renderer,           21},
 #endif
@@ -1491,7 +1491,7 @@ static menuitem_t OP_SoundOptionsMenu[] =
 
 	{IT_STRING | IT_CVAR,  NULL,  "MIDI Music", &cv_gamemidimusic, 36},
 	{IT_STRING | IT_CVAR | IT_CV_SLIDER, NULL, "MIDI Music Volume", &cv_midimusicvolume, 41},
-	
+
 	{IT_STRING | IT_CVAR,  NULL,  "Music Preference", &cv_musicpref, 51},
 
 	{IT_HEADER, NULL, "Miscellaneous", NULL, 61},
@@ -1687,6 +1687,26 @@ static menuitem_t OP_MonitorToggleMenu[] =
 	{IT_STRING|IT_CVAR|IT_CV_INVISSLIDER, NULL, "Armageddon Shield", &cv_bombshield,   120},
 	{IT_STRING|IT_CVAR|IT_CV_INVISSLIDER, NULL, "1 Up",              &cv_1up,          130},
 	{IT_STRING|IT_CVAR|IT_CV_INVISSLIDER, NULL, "Eggman Box",        &cv_eggmanbox,    140},
+};
+
+//NetPlus options menu
+static menuitem_t OP_NetPlusOptionsMenu[] =
+{
+	{IT_HEADER, NULL, "Rollback netcode", NULL, 10},
+	{IT_CVAR | IT_STRING, NULL, "Enable simulation", &cv_simulate,   20}, //sim
+	{IT_CVAR | IT_STRING, NULL, "Tics of control lag cancelled out", &cv_simulatetics,   30}, //simtics
+	{IT_CVAR | IT_STRING, NULL, "Tics to reduce players' jumpness",     &cv_netsteadyplayers,   40}, //simsteadyplayers
+	{IT_CVAR | IT_STRING, NULL, "Do not simulate ring slinging",     &cv_netslingdelay,   50}, //simslingdelay
+	{IT_CVAR | IT_STRING, NULL, "Distance to simulate objects within",     &cv_simulateculldistance, 60}, //simcull
+
+	{IT_HEADER, NULL, "Visuals", NULL, 80},
+	{IT_CVAR | IT_STRING, NULL, "Length and lifetime of players' trails",     &cv_nettrails,      90}, //simtrails
+
+	{IT_HEADER, NULL, "Server and client timers synch", NULL, 110},
+	{IT_CALL | IT_STRING, NULL, "Try to reduce game jitter manually",    M_NetPlusAutoTimeFudge,   120}, //autotimefudge
+
+	{IT_HEADER, NULL, "Debug", NULL, 140},
+	{IT_CVAR | IT_STRING, NULL, "NetPlus simulation statistics",      &cv_netsimstat, 150}, //netsimstat
 };
 
 // ==========================================================================
@@ -2269,6 +2289,14 @@ menu_t OP_EraseDataDef = DEFAULTMENUSTYLE(
 	MTREE3(MN_OP_MAIN, MN_OP_DATA, MN_OP_ERASEDATA),
 	"M_DATA", OP_EraseDataMenu, &OP_DataOptionsDef, 60, 30);
 
+//Netplus options menu
+menu_t OP_NetPlusDef = DEFAULTMENUSTYLE(
+	MN_OP_MAIN,
+	"M_OPTTTL",
+	OP_NetPlusOptionsMenu,
+	&MainDef, 
+	10, 30);
+
 // ==========================================================================
 // CVAR ONCHANGE EVENTS GO HERE
 // ==========================================================================
@@ -2457,46 +2485,6 @@ static void Newgametype_OnChange(void)
 			CV_SetValue(&cv_nextmap, M_GetFirstLevelInList(cv_newgametype.value));
 	}
 }
-
-#ifdef HWRENDER
-static void Newrenderer_AREYOUSURE(INT32 c)
-{
-	int n;
-	switch (c)
-	{
-		case 'y':
-		case KEY_ENTER:
-			n = cv_newrenderer.value;
-			newrenderer_set |= n;
-			CV_SetValue(&cv_renderer, n);
-			break;
-		default:
-			CV_StealthSetValue(&cv_newrenderer, cv_renderer.value);
-	}
-}
-
-static void Newrenderer_OnChange(void)
-{
-	/* Well this works for now because there's only two options. */
-	int n;
-	n = cv_newrenderer.value;
-	newrenderer_set |= cv_renderer.value;
-	if (( newrenderer_set & n ))
-		CV_SetValue(&cv_renderer, n);
-	else
-	{
-		M_StartMessage(
-				"The OpenGL renderer is incomplete.\n"
-				"Some visuals may fail to appear, or\n"
-				"appear incorrectly.\n"
-				"Do you still want to switch to it?\n"
-				"\n"
-				"(Press 'y' or 'n')",
-				Newrenderer_AREYOUSURE, MM_YESNO
-		);
-	}
-}
-#endif/*HWRENDER*/
 
 void Screenshot_option_Onchange(void)
 {
@@ -3198,6 +3186,11 @@ static void M_ResetCvars(void)
 	}
 }
 
+static void M_NetPlusAutoTimeFudge(void)
+{
+	Command_Autotimefudge();
+}
+
 static void M_NextOpt(void)
 {
 	INT16 oldItemOn = itemOn; // prevent infinite loop
@@ -3705,8 +3698,8 @@ void M_StartControlPanel(void)
 	if (!Playing())
 	{
 		// Secret menu!
-		MainMenu[singleplr].alphaKey = (M_AnySecretUnlocked()) ? 76 : 84;
-		MainMenu[multiplr].alphaKey = (M_AnySecretUnlocked()) ? 84 : 92;
+		MainMenu[singleplr].alphaKey = (M_AnySecretUnlocked()) ? 68 : 76;
+		MainMenu[multiplr].alphaKey = (M_AnySecretUnlocked()) ? 76 : 84;
 		MainMenu[secrets].status = (M_AnySecretUnlocked()) ? (IT_STRING | IT_CALL) : (IT_DISABLED);
 
 		currentMenu = &MainDef;
@@ -6954,6 +6947,14 @@ static void M_Options(INT32 choice)
 
 	OP_MainDef.prevMenu = currentMenu;
 	M_SetupNextMenu(&OP_MainDef);
+}
+
+//NetPlus options menu
+static void M_NetPlusOptions(INT32 choice)
+{
+	(void)choice;
+	OP_NetPlusDef.prevMenu = currentMenu;
+	M_SetupNextMenu(&OP_NetPlusDef);
 }
 
 static void M_RetryResponse(INT32 ch)
@@ -13379,6 +13380,14 @@ static void M_DrawScreenshotMenu(void)
 	}
 #endif
 }
+
+// ===============
+// NetPlus Options Menu drawing routine
+// ===============
+// static void M_DrawNetPlusMenu(void)
+// {
+// 	M_DrawGenericScrollMenu();
+// }
 
 // ===============
 // Monitor Toggles

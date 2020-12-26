@@ -69,7 +69,6 @@
 #include "g_input.h" // tutorial mode control scheming
 #include "i_net.h" // for netvariabletime (srb2netplus)
 
-
 #ifdef CMAKECONFIG
 #include "config.h"
 #else
@@ -101,7 +100,8 @@ UINT8 window_notinfocus = false;
 // DEMO LOOP
 //
 static char *startupwadfiles[MAX_WADFILES];
-extern char netDebugText[10000];
+static char *startuppwads[MAX_WADFILES];
+
 boolean devparm = false; // started game with -devparm
 
 boolean singletics = false; // timedemo
@@ -137,6 +137,7 @@ char srb2path[256] = ".";
 boolean usehome = true;
 const char *pandf = "%s" PATHSEP "%s";
 static char addonsdir[MAX_WADPATH];
+
 
 //
 // EVENT HANDLING
@@ -632,6 +633,8 @@ static void D_Display(void)
 			snprintf(s, sizeof s - 1, "SysMiss %.2f%%", lostpercent);
 			V_DrawRightAlignedString(BASEVIDWIDTH, BASEVIDHEIGHT-ST_HEIGHT-10, V_YELLOWMAP, s);
 		}
+
+		//netsimstat srb2netplus
 		if (cv_netsimstat.value && netDebugText[0] != 0)
 		{
 			const char* str = netDebugText;
@@ -765,8 +768,7 @@ void D_CheckRendererState(void)
 // =========================================================================
 
 tic_t rendergametic;
-
-boolean hasAckedPackets = false;
+boolean hasAckedPackets = false; //do we know that we have netpackets with ACK
 
 void D_SRB2Loop(void)
 {
@@ -826,23 +828,23 @@ void D_SRB2Loop(void)
 			lastwipetic = 0;
 		}
 
-		// if (cv_netvariabletime.value != -1)
-		// 		{
-		// 			if (gamestate == GS_LEVEL && consoleplayer != 0)
-		// 			{
-		// 				if (I_NetCanGet() && !hasAckedPackets)
-		// 				{
-		// 					I_SetTime(max(I_GetTime(), oldentertics + 1), 0, false); // we just got a packet, execute it asap!
-		// 					hasAckedPackets = true;
-		// 				}
-		// 				else if (!I_NetCanGet() && I_GetTime() - oldentertics < 2)
-		// 				{
-		// 					// wait a bit longer for a packet
-		// 					I_Sleep();
-		// 					continue;
-		// 				}
-		// 			}
-		// 		}
+		if (cv_netvariabletime.value != -1)
+		{
+			if (gamestate == GS_LEVEL && consoleplayer != 0)
+			{
+				if (I_NetCanGet() && !hasAckedPackets)
+				{
+					I_SetTime(max(I_GetTime(), oldentertics + 1), 0, false); // we just got a packet, execute it asap!
+					hasAckedPackets = true;
+				}
+				else if (!I_NetCanGet() && I_GetTime() - oldentertics < 2)
+				{
+					// wait a bit longer for a packet
+					I_Sleep();
+					continue;
+				}
+			}
+		}
 
 		// get real tics
 		entertic = I_GetTime();
@@ -913,7 +915,6 @@ void D_SRB2Loop(void)
 #ifdef HW3SOUND
 		HW3S_EndFrameUpdate();
 #endif
-
 		LUA_Step();
 		hasAckedPackets = false;
 	}
@@ -1020,12 +1021,12 @@ void D_StartTitle(void)
 //
 // D_AddFile
 //
-static void D_AddFile(const char *file)
+static void D_AddFile(char **list, const char *file)
 {
 	size_t pnumwadfiles;
 	char *newfile;
 
-	for (pnumwadfiles = 0; startupwadfiles[pnumwadfiles]; pnumwadfiles++)
+	for (pnumwadfiles = 0; list[pnumwadfiles]; pnumwadfiles++)
 		;
 
 	newfile = malloc(strlen(file) + 1);
@@ -1035,16 +1036,16 @@ static void D_AddFile(const char *file)
 	}
 	strcpy(newfile, file);
 
-	startupwadfiles[pnumwadfiles] = newfile;
+	list[pnumwadfiles] = newfile;
 }
 
-static inline void D_CleanFile(void)
+static inline void D_CleanFile(char **list)
 {
 	size_t pnumwadfiles;
-	for (pnumwadfiles = 0; startupwadfiles[pnumwadfiles]; pnumwadfiles++)
+	for (pnumwadfiles = 0; list[pnumwadfiles]; pnumwadfiles++)
 	{
-		free(startupwadfiles[pnumwadfiles]);
-		startupwadfiles[pnumwadfiles] = NULL;
+		free(list[pnumwadfiles]);
+		list[pnumwadfiles] = NULL;
 	}
 }
 
@@ -1129,7 +1130,7 @@ static void IdentifyVersion(void)
 
 	// Load the IWAD
 	if (srb2wad != NULL && FIL_ReadFileOK(srb2wad))
-		D_AddFile(srb2wad);
+		D_AddFile(startupwadfiles, srb2wad);
 	else
 		I_Error("srb2.pk3 not found! Expected in %s, ss file: %s\n", srb2waddir, srb2wad);
 
@@ -1140,14 +1141,14 @@ static void IdentifyVersion(void)
 	// checking in D_SRB2Main
 
 	// Add the maps
-	D_AddFile(va(pandf,srb2waddir,"zones.pk3"));
+	D_AddFile(startupwadfiles, va(pandf,srb2waddir,"zones.pk3"));
 
 	// Add the players
-	D_AddFile(va(pandf,srb2waddir, "player.dta"));
+	D_AddFile(startupwadfiles, va(pandf,srb2waddir, "player.dta"));
 
 #ifdef USE_PATCH_DTA
 	// Add our crappy patches to fix our bugs
-	D_AddFile(va(pandf,srb2waddir,"patch.pk3"));
+	D_AddFile(startupwadfiles, va(pandf,srb2waddir,"patch.pk3"));
 #endif
 
 #if !defined (HAVE_SDL) || defined (HAVE_MIXER)
@@ -1157,7 +1158,7 @@ static void IdentifyVersion(void)
 			const char *musicpath = va(pandf,srb2waddir,str);\
 			int ms = W_VerifyNMUSlumps(musicpath); \
 			if (ms == 1) \
-				D_AddFile(musicpath); \
+				D_AddFile(startupwadfiles, musicpath); \
 			else if (ms == 0) \
 				I_Error("File "str" has been modified with non-music/sound lumps"); \
 		}
@@ -1347,7 +1348,7 @@ void D_SRB2Main(void)
 				{
 					if (!W_VerifyNMUSlumps(s))
 						G_SetGameModified(true);
-					D_AddFile(s);
+					D_AddFile(startuppwads, s);
 				}
 			}
 		}
@@ -1388,8 +1389,8 @@ void D_SRB2Main(void)
 
 	// load wad, including the main wad file
 	CONS_Printf("W_InitMultipleFiles(): Adding IWAD and main PWADs.\n");
-	W_InitMultipleFiles(startupwadfiles, mainwads);
-	D_CleanFile();
+	W_InitMultipleFiles(startupwadfiles);
+	D_CleanFile(startupwadfiles);
 
 #ifndef DEVELOP // md5s last updated 22/02/20 (ddmmyy)
 
@@ -1425,8 +1426,6 @@ void D_SRB2Main(void)
 	// setup loading screen
 	SCR_Startup();
 
-	// we need the font of the console
-	CONS_Printf("HU_Init(): Setting up heads up display.\n");
 	HU_Init();
 
 	CON_Init();
@@ -1437,6 +1436,13 @@ void D_SRB2Main(void)
 	S_RegisterSoundStuff();
 
 	I_RegisterSysCommands();
+
+	CONS_Printf("W_InitMultipleFiles(): Adding extra PWADs.\n");
+	W_InitMultipleFiles(startuppwads);
+	D_CleanFile(startuppwads);
+
+	CONS_Printf("HU_LoadGraphics()...\n");
+	HU_LoadGraphics();
 
 	//--------------------------------------------------------- CONFIG.CFG
 	M_FirstLoadConfig(); // WARNING : this do a "COM_BufExecute()"

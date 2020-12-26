@@ -1435,7 +1435,9 @@ void D_CloseConnection(void)
 		// close all connection
 		for (i = 0; i < MAXNETNODES; i++)
 			Net_CloseConnection(i|FORCECLOSE);
+
 		SOCK_FlushDelayBuffers(true);
+		
 		InitAck();
 
 		if (I_NetCloseSocket)

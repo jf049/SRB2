@@ -38,6 +38,7 @@
 // 3D Sound Interface
 #include "hardware/hw3sound.h"
 #else
+// static INT32 S_AdjustSoundParams(const mobj_t *listener, const mobj_t *source, INT32 *vol, INT32 *sep, INT32 *pitch, sfxinfo_t *sfxinfo);
 static INT32 S_AdjustSoundParams(const mobj_t *listener, fixed_t x, fixed_t y, fixed_t z, INT32 *vol, INT32 *sep, INT32 *pitch, sfxinfo_t *sfxinfo);
 #endif
 
@@ -537,6 +538,7 @@ void S_StartSoundAtVolume(const void *origin_p, sfxenum_t sfx_id, INT32 volume)
 
 	if (S_SoundDisabled() || !sound_started)
 		return;
+
 	if (((simtic != targetsimtic - 1 && origin == listenmobj) || (origin != listenmobj && issimulation))) // local player sounds play immediately during simulations
 		return;
 
@@ -941,8 +943,9 @@ void S_UpdateSounds(void)
 
 				// check non-local sounds for distance clipping
 				//  or modify their params
-				if (isspatial && 
-					((c->origin && ((c->origin != players[consoleplayer].mo) ||	(splitscreen && c->origin != players[secondarydisplayplayer].mo)))))
+				if (isspatial &&
+					((c->origin && ((c->origin != players[consoleplayer].mo) ||
+					(splitscreen && c->origin != players[secondarydisplayplayer].mo)))))
 				{
 					fixed_t x, y, z;
 					const mobj_t *soundmobj = c->origin;
@@ -959,7 +962,6 @@ void S_UpdateSounds(void)
 						y = soundmobj->y;
 						z = soundmobj->z;
 					}
-
 					// Whomever is closer gets the sound, but only in splitscreen.
 					if (listenmobj && listenmobj2 && splitscreen)
 					{
@@ -1213,7 +1215,8 @@ INT32 S_AdjustSoundParams(const mobj_t *listener, fixed_t x, fixed_t y, fixed_t 
 	}
 	else
 	{
-		approx_dist = S_CalculateSoundDistance(listensource.x, listensource.y, listensource.z, x, y, z);
+		approx_dist = S_CalculateSoundDistance(listensource.x, listensource.y, listensource.z,
+												x, y, 	z);
 	}
 
 	// Ring loss, deaths, etc, should all be heard louder.
@@ -2198,7 +2201,7 @@ boolean S_RecallMusic(UINT16 status, boolean fromfirst)
 static lumpnum_t S_GetMusicLumpNum(const char *mname)
 {
 	boolean midipref = cv_musicpref.value;
-	
+
 	if (S_PrefAvailable(midipref, mname))
 		return W_GetNumForName(va(midipref ? "d_%s":"o_%s", mname));
 	else if (S_PrefAvailable(!midipref, mname))
@@ -2348,7 +2351,7 @@ void S_ChangeMusicEx(const char *mmusic, UINT16 mflags, boolean looping, UINT32 
 		I_FadeSong(0, prefadems, S_ChangeMusicToQueue);
 		return;
 	}
-	else if (strnicmp(music_name, newmusic, 6) || (mflags & MUSIC_FORCERESET) || 
+	else if (strnicmp(music_name, newmusic, 6) || (mflags & MUSIC_FORCERESET) ||
 		(midipref != currentmidi && S_PrefAvailable(midipref, newmusic)))
  	{
 		CONS_Debug(DBG_DETAILED, "Now playing song %s\n", newmusic);

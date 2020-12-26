@@ -1201,7 +1201,7 @@ static consvar_t *CV_FindNetVar(UINT16 netid)
 {
 	consvar_t *cvar;
 
-	if (netid >= consvar_number_of_netids)
+	if (netid > consvar_number_of_netids)
 		return NULL;
 
 	for (cvar = consvar_vars; cvar; cvar = cvar->next)
@@ -1529,7 +1529,7 @@ badinput:
 //
 
 static boolean serverloading = false;
-static boolean serverloadingstealth = false;
+//static boolean serverloadingstealth = false; //TODO: understand what it does
 
 static consvar_t *
 ReadNetVar (UINT8 **p, char **return_value, boolean *return_stealth)
@@ -1543,7 +1543,7 @@ ReadNetVar (UINT8 **p, char **return_value, boolean *return_stealth)
 	netid   = READUINT16 (*p);
 	val     = (char *)*p;
 	SKIPSTRING (*p);
-	stealth = READUINT8(*p) || (serverloading && serverloadingstealth);
+	stealth = READUINT8(*p) || (serverloading /*&& serverloadingstealth*/); //TODO: understand what it does
 
 	cvar = CV_FindNetVar(netid);
 
@@ -1675,6 +1675,8 @@ static void CV_LoadVars(UINT8 **p,
 
 	// prevent "invalid command received"
 	serverloading = true;
+	//TODO: why do we even need this if we already have "stealth"
+	//serverloadingstealth = onlyIfChanged;
 
 	for (cvar = consvar_vars; cvar; cvar = cvar->next)
 		if (cvar->flags & CV_NETVAR)
@@ -1692,9 +1694,8 @@ static void CV_LoadVars(UINT8 **p,
 	serverloading = false;
 }
 
-void CV_LoadNetVars(UINT8 **p, boolean onlyIfChanged)
+void CV_LoadNetVars(UINT8 **p, boolean t)
 {
-	serverloadingstealth = onlyIfChanged;
 	CV_LoadVars(p, ReadNetVar);
 }
 

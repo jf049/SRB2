@@ -54,11 +54,11 @@ typedef LPVOID (WINAPI *p_MapViewOfFile) (HANDLE, DWORD, DWORD, DWORD, SIZE_T);
 #include <fcntl.h>
 #endif
 
-#if defined (_WIN32)
-DWORD TimeFunction(int requested_frequency);
-#else
+// #if defined (_WIN32)
+// DWORD TimeFunction(int requested_frequency);
+// #else
 int TimeFunction(int requested_frequency);
-#endif
+// #endif
 
 #include <stdio.h>
 #ifdef _WIN32
@@ -560,14 +560,12 @@ static void Impl_HandleKeyboardConsoleEvent(KEY_EVENT_RECORD evt, HANDLE co)
 			case VK_TAB:
 				event.data1 = KEY_NULL;
 				break;
-			case VK_SHIFT:
-				event.data1 = KEY_LSHIFT;
-				break;
 			case VK_RETURN:
 				entering_con_command = false;
 				/* FALLTHRU */
 			default:
-				event.data1 = MapVirtualKey(evt.wVirtualKeyCode,2); // convert in to char
+				//event.data1 = MapVirtualKey(evt.wVirtualKeyCode,2); // convert in to char
+				event.data1 = evt.uChar.AsciiChar;
 		}
 		if (co != INVALID_HANDLE_VALUE && GetFileType(co) == FILE_TYPE_CHAR && GetConsoleMode(co, &t))
 		{
@@ -584,18 +582,6 @@ static void Impl_HandleKeyboardConsoleEvent(KEY_EVENT_RECORD evt, HANDLE co)
 			{
 				WriteConsoleOutputCharacterA(co, " ",1, CSBI.dwCursorPosition, &t);
 			}
-		}
-	}
-	else
-	{
-		event.type = ev_keyup;
-		switch (evt.wVirtualKeyCode)
-		{
-			case VK_SHIFT:
-				event.data1 = KEY_LSHIFT;
-				break;
-			default:
-				break;
 		}
 	}
 	if (event.data1) D_PostEvent(&event);
@@ -2058,218 +2044,69 @@ ticcmd_t *I_BaseTiccmd2(void)
 	return &emptycmd2;
 }
 
-static int lastTimeFudge = -1;	
-extern consvar_t cv_timefudge;
+// #if defined (_WIN32)
+// static HMODULE winmm = NULL;
+// static DWORD starttickcount = 0; // hack for win2k time bug
+// static p_timeGetTime pfntimeGetTime = NULL;
 
+// // ---------
+// // I_GetTime
+// // Use the High Resolution Timer if available,
+// // else use the multimedia timer which has 1 millisecond precision on Windowz 95,
+// // but lower precision on Windows NT
+// // ---------
+
+// DWORD TimeFunction(int requested_frequency)
+// {
+// 	DWORD newtics = 0;
+// 	// this var acts as a multiplier if sub-millisecond precision is asked but is not available
+// 	int excess_frequency = requested_frequency / 1000;
+
+// 	if (!starttickcount) // high precision timer
+// 	{
+// 		LARGE_INTEGER currtime; // use only LowPart if high resolution counter is not available
+// 		static LARGE_INTEGER basetime = {{0, 0}};
+
+// 		// use this if High Resolution timer is found
+// 		static LARGE_INTEGER frequency;
+
+// 		if (!basetime.LowPart)
+// 		{
+// 			if (!QueryPerformanceFrequency(&frequency))
+// 				frequency.QuadPart = 0;
+// 			else
+// 				QueryPerformanceCounter(&basetime);
+// 		}
+
+// 		if (frequency.LowPart && QueryPerformanceCounter(&currtime))
+// 		{
+// 			newtics = (INT32)((currtime.QuadPart - basetime.QuadPart) * requested_frequency
+// 				/ frequency.QuadPart);
+// 		}
+// 		else if (pfntimeGetTime)
+// 		{
+// 			currtime.LowPart = pfntimeGetTime();
+// 			if (!basetime.LowPart)
+// 				basetime.LowPart = currtime.LowPart;
+// 			if (requested_frequency > 1000)
+// 				newtics = currtime.LowPart - basetime.LowPart * excess_frequency;
+// 			else
+// 				newtics = (currtime.LowPart - basetime.LowPart)/(1000/requested_frequency);
+// 		}
+// 	}
+// 	else
+// 	{
+// 		if (requested_frequency > 1000)
+// 			newtics = (GetTickCount() - starttickcount) * excess_frequency;
+// 		else
+// 			newtics = (GetTickCount() - starttickcount)/(1000/requested_frequency);
+// 	}
+
+// 	return newtics;
+// }
 #if defined (_WIN32)
 static HMODULE winmm = NULL;
-static DWORD starttickcount = 0; // hack for win2k time bug
 static p_timeGetTime pfntimeGetTime = NULL;
-static LARGE_INTEGER basetime = {{0, 0}};
-
-// ---------
-// I_GetTime
-// Use the High Resolution Timer if available,
-// else use the multimedia timer which has 1 millisecond precision on Windowz 95,
-// but lower precision on Windows NT
-// ---------
-
-DWORD TimeFunction(int requested_frequency)
-{
-	DWORD newtics = 0;
-	// this var acts as a multiplier if sub-millisecond precision is asked but is not available
-	int excess_frequency = requested_frequency / 1000;
-
-	if (!starttickcount) // high precision timer
-	{
-		LARGE_INTEGER currtime; // use only LowPart if high resolution counter is not available
-		static LARGE_INTEGER basetime = {{0, 0}};
-
-		// use this if High Resolution timer is found
-		static LARGE_INTEGER frequency;
-
-		if (!basetime.LowPart)
-		{
-			if (!QueryPerformanceFrequency(&frequency))
-				frequency.QuadPart = 0;
-			else
-				QueryPerformanceCounter(&basetime);
-		}
-
-		if (frequency.LowPart && QueryPerformanceCounter(&currtime))
-		{
-			newtics = (INT32)((currtime.QuadPart - basetime.QuadPart) * requested_frequency
-				/ frequency.QuadPart);
-		}
-		else if (pfntimeGetTime)
-		{
-			currtime.LowPart = pfntimeGetTime();
-			if (!basetime.LowPart)
-				basetime.LowPart = currtime.LowPart;
-			if (requested_frequency > 1000)
-				newtics = currtime.LowPart - basetime.LowPart * excess_frequency;
-			else
-				newtics = (currtime.LowPart - basetime.LowPart)/(1000/requested_frequency);
-		}
-	}
-	else
-	{
-		if (requested_frequency > 1000)
-			newtics = (GetTickCount() - starttickcount) * excess_frequency;
-		else
-			newtics = (GetTickCount() - starttickcount)/(1000/requested_frequency);
-	}
-
-	return newtics;
-}
-
-//FOR WIN32!!!! NOT GUARANTEED TO WORK LOL GET LINUX INSTEAD LOLOLOLOL
-UINT64 I_GetTimeUs(void)
-{
-	UINT64 timeUs;
-	int excess_frequency = NEWTICRATE / 1000;
-
-	if (!starttickcount) // high precision timer
-	{
-		LARGE_INTEGER currtime; // use only LowPart if high resolution counter is not available
-
-		// use this if High Resolution timer is found
-		static LARGE_INTEGER frequency;
-
-		if (!basetime.LowPart)
-		{
-			if (!QueryPerformanceFrequency(&frequency))
-				frequency.QuadPart = 0;
-			else
-				QueryPerformanceCounter(&basetime);
-		}
-
-		if (frequency.LowPart && QueryPerformanceCounter(&currtime))
-		{
-			timeUs = (INT32)((currtime.QuadPart - basetime.QuadPart) * NEWTICRATE / frequency.QuadPart);
-		}
-		else if (pfntimeGetTime)
-		{
-			currtime.LowPart = pfntimeGetTime();
-			if (!basetime.LowPart)
-				basetime.LowPart = currtime.LowPart;
-			if (NEWTICRATE > 1000)
-				timeUs = currtime.LowPart - basetime.LowPart * excess_frequency;
-			else
-				timeUs = (currtime.LowPart - basetime.LowPart)/(1000/NEWTICRATE);
-		}
-	}
-	else
-	{
-		if (NEWTICRATE > 1000)
-			timeUs = (GetTickCount() - starttickcount) * excess_frequency;
-		else
-			timeUs = (GetTickCount() - starttickcount)/(1000/NEWTICRATE);
-	}
-
-	return timeUs;
-}
-
-// Adjusts the timer to the given tic time. The timer is set as though this tic has just started plus a fudge between 0 and 100.
-// A fudge of 99 means that although the assigned tic is valid, we are very very close to the next tic
-//FOR WIN32!!!! NOT GUARANTEED TO WORK LOL GET LINUX INSTEAD LOLOLOLOL
-// void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_frequency later
-// {
-// 	//DWORD oldTickCount = starttickcount;
-// 	static LARGE_INTEGER basetime = {{0, 0}};
-// 	tic = max(tic, I_GetTime());
-//
-// 	if (starttickcount)
-// 	{
-// 		starttickcount = GetTickCount() - (DWORD)((UINT64)tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
-//
-// 		if (useAbsoluteFudge)
-// 		{
-// 			starttickcount = starttickcount * NEWTICRATE / 1000 * 1000 * NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
-// 		}
-// 	}
-//
-// 	static LARGE_INTEGER frequency;
-// 	if (!QueryPerformanceFrequency(&frequency))
-// 		frequency.QuadPart = 0;
-//
-// 	if (frequency.QuadPart)
-// 	{
-// 		LARGE_INTEGER currtime; // use only LowPart if high resolution counter is not available
-//
-// 		if (QueryPerformanceCounter(&currtime))
-// 		{
-// 			basetime.QuadPart = currtime.QuadPart - (tic * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / TICRATE / 100);
-//
-// 			if (useAbsoluteFudge)
-// 			{
-// 				basetime.QuadPart = basetime.QuadPart * NEWTICRATE / frequency.QuadPart * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / NEWTICRATE / 100;
-// 			}
-// 		}
-// 	}
-// 	else if (pfntimeGetTime)
-// 	{
-// 		basetime.QuadPart = pfntimeGetTime() - (tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
-//
-// 		if (useAbsoluteFudge)
-// 		{
-// 			basetime.QuadPart = basetime.QuadPart * NEWTICRATE / 1000 * 1000 / NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
-// 		}
-// 	}
-// }
-
-// Adjusts the timer to the given tic time. The timer is set as though this tic has just started plus a fudge between 0 and 100.
-// A fudge of 99 means that although the assigned tic is valid, we are very very close to the next tic
-// void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge)
-// {
-// 	DWORD oldTickCount = starttickcount;
-// 	LARGE_INTEGER oldBaseTime = basetime;
-
-// 	tic = max(tic, I_GetTime());
-
-// 	if (starttickcount)
-// 	{
-// 		starttickcount = GetTickCount() - (DWORD)((UINT64)tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
-
-// 		if (useAbsoluteFudge)
-// 		{
-// 			starttickcount = starttickcount * NEWTICRATE / 1000 * 1000 * NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
-// 		}
-// 	}
-// 	static LARGE_INTEGER frequency;
-// 	if (!basetime.LowPart)
-// 	{
-// 		if (!QueryPerformanceFrequency(&frequency))
-// 			frequency.QuadPart = 0;
-// 		else
-// 			QueryPerformanceCounter(&basetime);
-// 	}
-
-// 	if (frequency.QuadPart)
-// 	{
-// 		LARGE_INTEGER currtime; // use only LowPart if high resolution counter is not available
-
-// 		if (QueryPerformanceCounter(&currtime))
-// 		{
-// 			basetime.QuadPart = currtime.QuadPart - (tic * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / TICRATE / 100);
-
-// 			if (useAbsoluteFudge)
-// 			{
-// 				basetime.QuadPart = basetime.QuadPart * NEWTICRATE / frequency.QuadPart * frequency.QuadPart / NEWTICRATE + frequency.QuadPart * fudge / NEWTICRATE / 100;
-// 			}
-// 		}
-// 	}
-// 	else if (pfntimeGetTime)
-// 	{
-// 		basetime.QuadPart = pfntimeGetTime() - (tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
-
-// 		if (useAbsoluteFudge)
-// 		{
-// 			basetime.QuadPart = basetime.QuadPart * NEWTICRATE / 1000 * 1000 / NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
-// 		}
-// 	}
-// }
-
 static void I_ShutdownTimer(void)
 {
 	pfntimeGetTime = NULL;
@@ -2282,32 +2119,37 @@ static void I_ShutdownTimer(void)
 		winmm = NULL;
 	}
 }
-#else
+#endif
+
+
+// #else
 //
 // I_GetTime
 // returns time in 1/TICRATE second tics
 //
-static Uint64 basetime = 0;
+
 // millisecond precision only
+int lastTimeFudge = -1;	
+Uint64 basetime;
 int TimeFunction(int requested_frequency)
 {
-	// static Uint64 basetime = 0;
-		   Uint64 ticks = SDL_GetTicks();
+	Uint64 ticks = SDL_GetTicks();
 
 	if (!basetime)
 		basetime = ticks;
 
+	//TODO: Do proper timings here
 	// fudge the timer for better netgame sync
 	if (cv_timefudge.value != lastTimeFudge)
 	{
-		Uint64 frame = basetime * requested_frequency / 1000;
+		Uint64 frame = basetime * NEWTICRATE / 1000;
 
 		if (cv_timefudge.value > lastTimeFudge)
 		{
 			frame--; // do not allow the same tic to play twice
 		}
 
-		basetime = (Uint64)(frame * 1000 / requested_frequency + 1000 * cv_timefudge.value / requested_frequency / 100);
+		basetime = (Uint64)(frame * 1000 / NEWTICRATE + 1000 * cv_timefudge.value / NEWTICRATE / 100);
 		lastTimeFudge = cv_timefudge.value;
 	}
 
@@ -2320,39 +2162,34 @@ int TimeFunction(int requested_frequency)
 	return ticks;
 }
 
-// Adjusts the timer to the given tic time. The timer is set as though this tic has just started plus a fudge between 0 and 100.
-// A fudge of 99 means that although the assigned tic is valid, we are very very close to the next tic
-//FOR LINUX
-// static unsigned int starttickcount = 0;
-// void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_frequency later
-// {
-// 	//
-// 	// unsigned int oldTickCount = starttickcount;
-// 	// int64_t oldBaseTime = basetime;
-
-// 	tic = max(tic, SDL_GetTicks());
-
-// 	if (starttickcount)
-// 	{
-// 		starttickcount = SDL_GetTicks() - (unsigned int)((UINT64)tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
-// 		if (useAbsoluteFudge)
-// 		{
-// 			starttickcount = starttickcount * NEWTICRATE / 1000 * 1000 * NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
-// 		}
-// 	}
-// 	if (useAbsoluteFudge)
-// 	{
-// 		basetime = basetime * NEWTICRATE / 1000 * 1000 / NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
-// 	}
-// }
-
-
-
 UINT64 I_GetTimeUs(void)
 {
 	return (SDL_GetTicks() - basetime) * 1000;
 }
-#endif
+
+static unsigned int starttickcount = 0;
+void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_frequency later
+{
+	//
+	// unsigned int oldTickCount = starttickcount;
+	// int64_t oldBaseTime = basetime;
+
+	tic = max(tic, SDL_GetTicks());
+
+	if (starttickcount)
+	{
+		starttickcount = SDL_GetTicks() - (unsigned int)((UINT64)tic * 1000 / NEWTICRATE + 1000 * fudge / TICRATE / 100);
+		if (useAbsoluteFudge)
+		{
+			starttickcount = starttickcount * NEWTICRATE / 1000 * 1000 * NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
+		}
+	}
+	if (useAbsoluteFudge)
+	{
+		basetime = basetime * NEWTICRATE / 1000 * 1000 / NEWTICRATE + 1000 * fudge / NEWTICRATE / 100;
+	}
+}
+// #endif
 
 tic_t I_GetTime(void)
 {
@@ -2363,6 +2200,8 @@ int I_GetTimeMicros(void)
 {
 	return TimeFunction(1000000);
 }
+
+
 
 //
 //I_StartupTimer

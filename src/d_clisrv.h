@@ -35,7 +35,7 @@ applications may follow different packet versions.
 //  be transmitted.
 
 // Networking and tick handling related.
-#define BACKUPTICS 1024
+#define BACKUPTICS 96
 #define CLIENTBACKUPTICS 32
 #define MAXTEXTCMD 256
 
@@ -49,6 +49,7 @@ applications may follow different packet versions.
 
 // Maximum number of client-side simulations allowed. A simulation is a version of the game state extrapolated some frames ahead to cancel out network latency
 #define MAXSIMULATIONS (TICCMD_TIME_SIZE-1)
+// #define MAXSIMULATIONS 35
 
 //
 // Packet structure
@@ -539,6 +540,7 @@ typedef enum
 
 } kickreason_t;
 
+
 // Player movement histories for simulated gamestates
 typedef struct
 {
@@ -564,7 +566,7 @@ extern boolean acceptnewnode;
 extern SINT8 servernode;
 
 extern boolean issimulation; // whether the currently executed tic is part of a simulated gamestate
-extern steadyplayer_t steadyplayers[MAXPLAYERS];
+extern steadyplayer_t steadyplayers[MAXPLAYERS]; // Player movement histories for simulated gamestates
 
 void Command_Ping_f(void);
 extern tic_t connectiontimeout;

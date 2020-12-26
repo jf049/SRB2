@@ -1346,7 +1346,7 @@ void Polyobj_InitLevel(void)
 			PolyObjects[i].origx = qitem->mo->x;
 			PolyObjects[i].origy = qitem->mo->y;
 			PolyObjects[i].origz = qitem->mo->z;
-			PolyObjects[i].tag = qitem->mo->spawnpoint->tag;
+			PolyObjects[i].origangle = qitem->mo->spawnpoint->angle;
 		}
 
 		// move polyobjects to spawn points

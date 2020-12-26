@@ -12852,24 +12852,34 @@ void P_PlayerAfterThink(player_t *player)
 	}
 }
 
+//Turns player's mobj and its camera
 void P_SetPlayerAngle(player_t *player, angle_t angle)
 {
-	INT16 delta = (INT16)(angle >> 16) - player->angleturn;
+	if (!issimulation && (player == &players[consoleplayer]
+		|| &players[secondarydisplayplayer])) //do not simulate turning for local players
+	{
+		INT16 delta = (INT16)(angle >> 16) - player->angleturn;
 
-	P_ForceLocalAngle(player, P_GetLocalAngle(player) + (delta << 16));
-	player->angleturn += delta;
+		P_ForceLocalAngle(player, P_GetLocalAngle(player) + (delta << 16));
+		player->angleturn += delta;
+	}
 }
 
+//Turns player's camera
 void P_SetLocalAngle(player_t *player, angle_t angle)
 {
-	INT16 delta = (INT16)((angle - P_GetLocalAngle(player)) >> 16);
+	if (!issimulation && (player == &players[consoleplayer]
+		|| &players[secondarydisplayplayer])) //do not simulate turning for local players
+	{
+		INT16 delta = (INT16)((angle - P_GetLocalAngle(player)) >> 16);
 
-	P_ForceLocalAngle(player, P_GetLocalAngle(player) + (angle_t)(delta << 16));
+		P_ForceLocalAngle(player, P_GetLocalAngle(player) + (angle_t)(delta << 16));
 
-	if (player == &players[consoleplayer])
-		ticcmd_oldangleturn[0] += delta;
-	else if (player == &players[secondarydisplayplayer])
-		ticcmd_oldangleturn[1] += delta;
+		if (player == &players[consoleplayer])
+			ticcmd_oldangleturn[0] += delta;
+		else if (player == &players[secondarydisplayplayer])
+			ticcmd_oldangleturn[1] += delta;
+	}
 }
 
 angle_t P_GetLocalAngle(player_t *player)
@@ -12884,12 +12894,16 @@ angle_t P_GetLocalAngle(player_t *player)
 
 void P_ForceLocalAngle(player_t *player, angle_t angle)
 {
-	angle = angle & ~UINT16_MAX;
+	if (!issimulation && (player == &players[consoleplayer]
+		|| &players[secondarydisplayplayer])) //do not simulate turning for local players
+	{
+		angle = angle & ~UINT16_MAX;
 
-	if (player == &players[consoleplayer])
-		localangle = angle;
-	else if (player == &players[secondarydisplayplayer])
-		localangle2 = angle;
+		if (player == &players[consoleplayer])
+			localangle = angle;
+		else if (player == &players[secondarydisplayplayer])
+			localangle2 = angle;
+	}
 }
 
 boolean P_PlayerFullbright(player_t *player)
