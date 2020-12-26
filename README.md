@@ -5,9 +5,9 @@
 This repo is a WIP fork of LXShades/SRB2/netplus branch. Expect things to be broken.
 
 ## Known issues
-- Huge memory usage during simulations (over 7-12GB of RAM). x86 (32bit) builds are unusable at the moment.
-- BLUA is not simulated. Client-side LUAs work.
-- Camera (locamaiming) does not synch well with character's angle.
+- BACKUPTICS reduced from 1024 to 96 to combat memory heap overflow on x86 builds
+- BLUA is not properly simulated. Client-side LUAs work.
+- Camera (locamaiming) does not synch immediatelly when it's being changed during simulations.
 
 ## Dependencies
 - NASM (x86 builds only)
@@ -20,8 +20,6 @@ This repo is a WIP fork of LXShades/SRB2/netplus branch. Expect things to be bro
 ## Compiling
 
 See [SRB2 Wiki/Source code compiling](http://wiki.srb2.org/wiki/Source_code_compiling)
-For Windows and cross-compiling from Linux, I recommend MinGW-w64 if possible.
-For Linux, use whatever you want.
 
 ## Disclaimer
 Sonic Team Junior is in no way affiliated with SEGA or Sonic Team. We do not claim ownership of any of SEGA's intellectual property used in SRB2.
