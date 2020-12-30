@@ -3924,18 +3924,22 @@ static void TimeLimit_OnChange(void)
 
 	if (cv_timelimit.value != 0)
 	{
-		CONS_Printf(M_GetText("Levels will end after %d minute%s.\n"),cv_timelimit.value,cv_timelimit.value == 1 ? "" : "s"); // Graue 11-17-2003
-		timelimitintics = cv_timelimit.value * 60 * TICRATE;
-
+		UINT32 newtimelimit = cv_timelimit.value * 60 * TICRATE;
 		//add hidetime for tag too!
 		if (G_TagGametype())
-			timelimitintics += hidetime * TICRATE;
+			newtimelimit += hidetime * TICRATE;
+
+		if (newtimelimit != timelimitintics)
+		{
+			CONS_Printf(M_GetText("Levels will end after %d minute%s.\n"),cv_timelimit.value,cv_timelimit.value == 1 ? "" : "s"); // Graue 11-17-2003
+			timelimitintics = newtimelimit;
+		}
 
 		// Note the deliberate absence of any code preventing
 		//   pointlimit and timelimit from being set simultaneously.
 		// Some people might like to use them together. It works.
 	}
-	else if (netgame || multiplayer && timelimitintics > 0)
+	else if ((netgame || multiplayer) && timelimitintics > 0)
 	{
 		timelimitintics = 0;
 		CONS_Printf(M_GetText("Time limit disabled\n"));

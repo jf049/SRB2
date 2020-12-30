@@ -5187,7 +5187,7 @@ void P_SaveGameState(savestate_t* savestate)
 
 	if (savestate->buffer == NULL)
 	{
-		savestate->buffer = Z_Malloc(10 * 1024 * 1024, PU_STATIC, NULL);
+		savestate->buffer = Z_Malloc(10 * 1024 * 1024, PU_STATIC, NULL); //ten megabytes?
 	}
 
 	save_p = savestate->buffer;
