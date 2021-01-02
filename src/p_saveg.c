@@ -3705,7 +3705,9 @@ static void P_LocalArchiveThinkers(void)
 
 	for (i = 0; i < NUM_THINKERLISTS; i++)
 	{
-#define RELINK(var) if (var != NULL) var = (mobj_t*)(var->mobjnum)
+// #define RELINK(var) if (var != NULL) var = (mobj_t*)(var->mobjnum)
+//thanks to GoldenTails for pointing out some nuances
+#define RELINK(var) if (var && var->mobjnum) var = (mobj_t*)(var->mobjnum) 
 		for (thinker = thlist[i].next; thinker != &thlist[i]; thinker = thinker->next)
 		{
 			actionf_p1 acp1 = thinker->function.acp1;
@@ -3921,6 +3923,7 @@ static void P_LocalUnArchiveThinkers()
 			{
 				for (j = numthinkersbytype[tclass] - 1; j >= 0; j--)
 				{
+					//TODO: FIX CRASH HERE
 					if (thinkersbytype[tclass][j] == NULL)
 					{
 						numthinkersbytype[tclass]--;
@@ -5076,7 +5079,7 @@ static inline boolean P_UnArchiveLuabanksAndConsistency(void)
 	return true;
 }
 
-UINT64 I_GetTimeUs(void);
+UINT32 I_GetTimeUs(void);
 
 void P_SaveGame(INT16 mapnum)
 {
@@ -5089,7 +5092,7 @@ void P_SaveNetGame(void)
 {
 	thinker_t *th;
 	mobj_t *mobj;
-	INT32 i = 1; // don't start from 0, it'd be confused with a blank pointer otherwise
+	uint32_t i = 1; // don't start from 0, it'd be confused with a blank pointer otherwise
 
 	CV_SaveNetVars(&save_p);
 	P_NetArchiveMisc();
@@ -5182,8 +5185,8 @@ void P_SaveGameState(savestate_t* savestate)
 	mobj_t* mobj;
 	thinker_t* th;
 	size_t s = 0;
-	int mobjnum = 1;
-	UINT64 time = I_GetTimeUs();
+	uint32_t mobjnum = 1;
+	uint64_t time = I_GetTimeUs();
 
 	if (savestate->buffer == NULL)
 	{
@@ -5232,6 +5235,8 @@ void P_SaveGameState(savestate_t* savestate)
 	P_NetArchiveSpecials();
 	P_LocalArchiveCameras();
 
+	// TODO: Make new P_NetArchiveRandSeed()
+
 #ifdef HAVE_BLUA
 	LUA_Archive();
 #endif
@@ -5248,10 +5253,14 @@ boolean P_LoadGameState(const savestate_t* savestate)
 	UINT64 time = I_GetTimeUs();
 	INT16 savedGameMap;
 
+	if (savestate->buffer == NULL)
+	{
+		CONS_Alert(CONS_ERROR, "Hell, we are going to load the invalid savestate!!!");
+	}
+
 	save_p = ((unsigned char*)savestate->buffer);
 
 	savedGameMap = READINT16(save_p);
-	globalmobjnum = READUINT32(save_p);
 
 	if (savedGameMap != gamemap)
 	{
@@ -5259,8 +5268,9 @@ boolean P_LoadGameState(const savestate_t* savestate)
 		return false;
 	}
 
-	CV_LoadNetVars(&save_p, true);
+	globalmobjnum = READUINT32(save_p);
 
+	CV_LoadNetVars(&save_p, true);
 	P_NetUnArchiveMisc(true);
 	P_LocalUnArchivePlayers();
 	P_LocalUnArchiveWorld();
@@ -5274,8 +5284,8 @@ boolean P_LoadGameState(const savestate_t* savestate)
 #endif
 
 	// This is stupid and hacky _squared_, but it's in the net load code and it says it might work, so I guess it might work!
-	//P_SetRandSeed(P_GetInitSeed());
-
+	// P_SetRandSeed(P_GetInitSeed());
+	
 	P_UnArchiveLuabanksAndConsistency();
 	loadStateBenchmark = I_GetTimeUs() - time;
 
@@ -5285,5 +5295,5 @@ boolean P_LoadGameState(const savestate_t* savestate)
 void P_GameStateFreeMemory(savestate_t* savestate)
 {
 	Z_Free(savestate->buffer);
-	savestate->buffer = NULL;
+	savestate->buffer = NULL; //a hacky way to ensure that the buffer is empty
 }

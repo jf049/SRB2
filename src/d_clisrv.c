@@ -5599,17 +5599,26 @@ smoothedTic is the time that we are using as a basis to cancel out jitter. this 
 liveTic is the real time of the game from startup, used to record our commands
 simTic is the gametic we've simulated to. if this == gametic, we haven't simulated any
 gameStateBuffer[gametic] is the game state before 'gametic' executes
+
+RTT means Round Trip Time, the length time it takes for a data packet to be sent to a destination 
+plus the time it takes for an acknowledgment of that packet to be received back at the origin
+
+rttJitter is how much stable are server's conditions, measured in how much 'tics' it jitters
+estimatedRTT is RTT in __tics__ (1/35 seconds) 
+minRTT
+maxRTT
+simulateTics recommendation based on the last known 'stable' RTT (range <= 2). Used for avoiding spike lag future-past-teleports.
 */
 tic_t liveTic;
 
 int serverJitter;
-int rttJitter;
-int estimatedRTT;
+int rttJitter; //Round Trip Time jitter
+int estimatedRTT; 
 int minRTT;
 int maxRTT;
 int maxLiveTicOffset;
 int minLiveTicOffset;
-int recommendedSimulateTics = 0; // simulateTics recommendation based on the last known 'stable' RTT (range <= 2). Used for avoiding spike lag future-past-teleports.
+int recommendedSimulateTics = 0;
 int smoothingDelay;
 UINT64 saveStateBenchmark = 0;
 UINT64 loadStateBenchmark = 0;
@@ -5680,31 +5689,33 @@ void TryRunTics(tic_t realtics)
 		return;
 
 	// record the actual local controls
-	boolean canSimulate = (gamestate == GS_LEVEL)
+	canSimulate = (gamestate == GS_LEVEL)
 				&& leveltime >= TICRATE && gametic >= TICRATE && (cv_simulate.value && !server)
 				&& !resynch_local_inprogress && gametic >= lastSavestateClearedTic + TICRATE;
 	boolean recordingStates = canSimulate;
 
 	if (simtic > gametic && !canSimulate)
 	{
-		// if we can't simulate anymore, we ought to reload the valid state and then invalidate all of them
+		// if we can't simulate anymore, we ought to reload the valid server's gamestate and then invalidate all of them
 		if (gameStateBufferIsValid[gametic % MAXSIMULATIONS])
 			P_LoadGameState(&gameStateBuffer[gametic % MAXSIMULATIONS]);
 		else
-			CONS_Printf("Problem: game state buffer is invalid! (simtic %d gametic %d)\n", simtic, gametic);
+			CONS_Printf("Game state buffer is invalid! (simtic %d gametic %d)\n", simtic, gametic);
 
 		simtic = gametic;
-		CONS_Printf("Clearing savestates due to !canSim\n");
+		CONS_Printf("Not simulating, clearing savestates...\n");
 		InvalidateSavestates();
 	}
 
-	PerformDebugRewinds();
+	PerformDebugRewinds(); //Revind the game to server's state (before simulating again). 
 
 	// record the actual local controls for this frame
 	liveTic = I_GetTime();
-
-	for (tic_t i = 0; i < realtics; i++)
+	for (tic_t i = 0; i < realtics; i++) //if realtics>=2, it copies input to several tics, means we lag
+	{
 		localTicBuffer[(liveTic - i) % MAXSIMULATIONS] = localcmds;
+	}
+	// localTicBuffer[liveTic % MAXSIMULATIONS] = localcmds;
 
 	// Run the real game as received from the server
 	if (neededtic > gametic && !resynch_local_inprogress)
@@ -5723,10 +5734,10 @@ void TryRunTics(tic_t realtics)
 			{
 				P_LoadGameState(&gameStateBuffer[gametic % MAXSIMULATIONS]);
 				if (Consistancy() != consistancy[gametic % BACKUPTICS])
-					CONS_Printf("oops, consistency error, even I got that one!\n");
+					CONS_Alert(CONS_WARNING, "Saved state at %d isn't consistent with the server!\n", gametic);
 			}
 			else if (simtic != gametic && !gameStateBufferIsValid[gametic % MAXSIMULATIONS])
-				CONS_Printf("Problem: game state buffer inaccessible but a simulation happened!!\n");
+				CONS_Alert(CONS_WARNING, "Problem: game state buffer inaccessible but a simulation happened!!\n");
 
 			// run the tics up to the real game tic
 			while (neededtic > gametic)
@@ -5760,7 +5771,8 @@ void TryRunTics(tic_t realtics)
 
 				// Leave a certain amount of tics present in the net buffer as long as we've ran at least one tic this frame.
 				if (client && gamestate == GS_LEVEL && leveltime > 3 && neededtic <= gametic + cv_netticbuffer.value)
-					break;
+					if (!canSimulate)
+						break;
 			}
 		}
 	}
@@ -5794,19 +5806,24 @@ void TryRunTics(tic_t realtics)
 UINT64 simStartTime;
 UINT64 simEndTime;
 
+
 static void RunSimulations()
 {
 	if (!gameStateBufferIsValid[gametic % MAXSIMULATIONS])
+	{
+		CONS_Alert(CONS_WARNING, "Can't simulate, save on %d is invalid!\n", gametic);
 		return; // do not simulate if we cannot guarantee a recovery
-
-	static int lastsimtic = 0;
-
+	}
+	lastsimtic = 0;
 	int tastyFudge = 0;
 	// hack: don't treat duplicate tics as extra round-trip time
 	for (int j = 1; j < 3; j++)
 	{
 		if (CompareTiccmd(&gameTicBuffer[gametic % MAXSIMULATIONS][consoleplayer], &gameTicBuffer[(gametic - j) % MAXSIMULATIONS][consoleplayer]))
+		{
 			tastyFudge++;
+			// CONS_Alert(CONS_WARNING, "Duplicate tics found\n");
+		}
 		else
 			break;
 	}
@@ -5881,7 +5898,7 @@ static void RunSimulations()
 	issimulation = true;
 	con_muted = true;
 
-	simStartTime = I_GetTimeUs();
+	simStartTime = I_GetTimeUs(); //for benchmarking
 
 	for (int i = 0; i < numToSimulate; i++)
 	{
@@ -6032,7 +6049,7 @@ void InvalidateSavestates()
 	if (simtic > gametic)
 		CONS_Printf("Warning: Savestates were invalidated during a simulation!!\n");
 
-	for (int i = 0; i < cv_simulatetics.value; i++)
+	for (int i = 0; i < MAXSIMULATIONS; i++)
 	{
 		if (gameStateBufferIsValid[i] == true)
 			if (&gameStateBuffer[i].buffer != NULL)
@@ -6058,7 +6075,7 @@ void DetermineNetConditions()
 
 	ticTimeOffsetHistory[liveTic % MAXOFFSETHISTORY] = (int)liveTic - (int)gametic;
 
-	// Find the net jitter based on the last 20 frames
+	// Find the net jitter based on the last 35 frames (one second)
 	for (int i = 0; i < MAXOFFSETHISTORY; i++)
 	{
 		minLiveTicOffset = min(minLiveTicOffset, ticTimeOffsetHistory[i]);
@@ -6104,7 +6121,7 @@ void DetermineNetConditions()
 	rttJitter = maxRTT - minRTT;
 
 	// stable server conditions? (but not just a big lag spike?)
-	if (rttJitter <= 2 && maxRTT < BACKUPTICS - 1) //TODO
+	if (rttJitter <= 2 && maxRTT < MAXSIMULATIONS - 1) //TODO
 	{
 		// we know roughly how much we should simulate then!
 		recommendedSimulateTics = maxRTT + 1;
@@ -6150,7 +6167,7 @@ void MakeNetDebugString()
 
 			if (DecodeTiccmdTime(&(gameTicBuffer[(simtic - i) % MAXSIMULATIONS][consoleplayer])) != 
 			   (DecodeTiccmdTime(&(gameTicBuffer[(simtic - i - 1) % MAXSIMULATIONS][consoleplayer])) + 1) % TICCMD_TIME_SIZE)
-				missed[0] = 'X'; // missed tic
+				missed[0] = 'X'; // missed tic, mostly like it's duplicated or we lag
 
 			// show tics and matches
 			sprintf(&netDebugText[strlen(netDebugText)], 
@@ -6159,7 +6176,7 @@ void MakeNetDebugString()
 						 DecodeTiccmdTime(&(gameTicBuffer[(simtic - i) % MAXSIMULATIONS][consoleplayer])), 
 						    (i == gametic ? "<" : " "),
 								   (liveTic - i) & (TICCMD_TIME_SIZE-1), 
-									   (i == estimatedRTT ? "<" : " "));
+									   (i == estimatedRTT ? "<" : " ")); //an arrow indicating how much lag we have
 		}
 		else {
 			sprintf(&netDebugText[strlen(netDebugText)],
@@ -6182,7 +6199,8 @@ void MakeNetDebugString()
 	sprintf(&netDebugText[strlen(netDebugText)], "\nTime save/load: %.2f/%.2f", (float)saveStateBenchmark/1000.0f, (float)loadStateBenchmark/1000.0f);
 	sprintf(&netDebugText[strlen(netDebugText)], "\nTotal +ms: %d", (int)((simEndTime - simStartTime + saveStateBenchmark + loadStateBenchmark) / 1000));
 	sprintf(&netDebugText[strlen(netDebugText)], "\nseed: %d", P_GetRandSeed());
-	lastSim = simtic;
+	sprintf(&netDebugText[strlen(netDebugText)], "\nCanSimulate: %d", canSimulate);
+	lastSim = simtic;	
 
 	unsigned int rtts[20] = { 0 };
 	for (int i = 0; i < rttBufferMax; i++)

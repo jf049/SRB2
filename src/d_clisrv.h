@@ -48,7 +48,7 @@ applications may follow different packet versions.
 #define TICCMD_TIME_SIZE (1<<(TICCMD_TIMEBITS_AIMING+TICCMD_TIMEBITS_ANGLE))
 
 // Maximum number of client-side simulations allowed. A simulation is a version of the game state extrapolated some frames ahead to cancel out network latency
-#define MAXSIMULATIONS TICRATE
+#define MAXSIMULATIONS TICRATE //one second of simulations
 // #define MAXSIMULATIONS 35
 
 //

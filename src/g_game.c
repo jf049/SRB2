@@ -118,6 +118,8 @@ INT32 secondarydisplayplayer; // for splitscreen
 tic_t simtic; // simulated tic
 tic_t targetsimtic; // target simulated tic
 tic_t smoothedTic;
+boolean canSimulate;
+tic_t lastsimtic;	
 
 tic_t gametic;
 tic_t levelstarttic; // gametic at level start

@@ -2118,9 +2118,9 @@ static void I_ShutdownTimer(void)
 	}
 }
 
+UINT64 timeUs = 0;
 UINT64 I_GetTimeUs(void)
 {
-	UINT64 timeUs;
 
 	if (!starttickcount) // high precision timer
 	{
@@ -2156,7 +2156,6 @@ UINT64 I_GetTimeUs(void)
 // A fudge of 99 means that although the assigned tic is valid, we are very very close to the next tic
 void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge)
 {
-	DWORD oldTickCount = starttickcount;
 
 	tic = max(tic, I_GetTime());
 
@@ -2240,7 +2239,7 @@ UINT64 I_GetTimeUs(void)
 
 
 static unsigned int starttickcount = 0;
-void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge) //add requested_frequency later
+void I_SetTime(tic_t tic, int fudge, boolean useAbsoluteFudge)
 {
 	//
 	// unsigned int oldTickCount = starttickcount;

@@ -256,7 +256,6 @@ static void M_ConfirmTeamChange(INT32 choice);
 static void M_SecretsMenu(INT32 choice);
 static void M_SetupChoosePlayer(INT32 choice);
 static UINT8 M_SetupChoosePlayerDirect(INT32 choice);
-static void M_NetPlusOptions(INT32 choice); //NetPlus options menu
 static void M_QuitSRB2(INT32 choice);
 menu_t SP_MainDef, OP_MainDef;
 menu_t MISC_ScrambleTeamDef, MISC_ChangeTeamDef;
@@ -501,17 +500,15 @@ consvar_t cv_dummyloadless = {"dummyloadless", "In-game", CV_HIDEN, loadless_con
 // ---------
 static menuitem_t MainMenu[] = // Positions change when unlocking Secret menu!
 {
-	{IT_STRING|IT_CALL,    NULL, "1  Player",   M_SinglePlayerMenu,      68},
+	{IT_STRING|IT_CALL,    NULL, "1  Player",   M_SinglePlayerMenu,      76},
 #ifndef NONET
-	{IT_STRING|IT_SUBMENU, NULL, "Multiplayer", &MP_MainDef,             76},
+	{IT_STRING|IT_SUBMENU, NULL, "Multiplayer", &MP_MainDef,             84},
 #else
 	{IT_STRING|IT_CALL,    NULL, "Multiplayer", M_StartSplitServerMenu,  76},
 #endif
-	{IT_STRING|IT_CALL,    NULL, "Extras",      M_SecretsMenu,           84},
-	{IT_CALL   |IT_STRING, NULL, "Addons",      M_Addons,                92},
-	{IT_STRING|IT_CALL,    NULL, "Options",     M_Options,              100},
-	//NetPlus options menu
-	{IT_STRING|IT_CALL,    NULL, "NetPlus Options",M_NetPlusOptions,    108},
+	{IT_STRING|IT_CALL,    NULL, "Extras",      M_SecretsMenu,           92},
+	{IT_CALL   |IT_STRING, NULL, "Addons",      M_Addons,               100},
+	{IT_STRING|IT_CALL,    NULL, "Options",     M_Options,              108},
 	{IT_STRING|IT_CALL,    NULL, "Quit  Game",  M_QuitSRB2,             116},
 };
 
@@ -568,10 +565,9 @@ static menuitem_t MPauseMenu[] =
 	{IT_STRING | IT_SUBMENU, NULL, "Switch Team...",            &MISC_ChangeTeamDef,   48},
 	{IT_STRING | IT_CALL,    NULL, "Player Setup",              M_SetupMultiPlayer,    56}, // alone
 	{IT_STRING | IT_CALL,    NULL, "Options",                   M_Options,             64},
-	{IT_STRING | IT_CALL,    NULL, "NetPlus Options",			M_NetPlusOptions,      72},
 
-	{IT_STRING | IT_CALL,    NULL, "Return to Title",           M_EndGame,             88},
-	{IT_STRING | IT_CALL,    NULL, "Quit Game",                 M_QuitSRB2,            96},
+	{IT_STRING | IT_CALL,    NULL, "Return to Title",           M_EndGame,             80},
+	{IT_STRING | IT_CALL,    NULL, "Quit Game",                 M_QuitSRB2,            88},
 };
 
 typedef enum
@@ -1080,8 +1076,9 @@ static menuitem_t OP_MainMenu[] =
 	{IT_SUBMENU | IT_STRING, NULL, "Sound Options...",     &OP_SoundOptionsDef, 60},
 
 	{IT_CALL    | IT_STRING, NULL, "Server Options...",    M_ServerOptions,     80},
+	{IT_STRING  |IT_SUBMENU, NULL, "NetPlus Options...",   &OP_NetPlusDef,      90},
 
-	{IT_SUBMENU | IT_STRING, NULL, "Data Options...",      &OP_DataOptionsDef, 100},
+	{IT_SUBMENU | IT_STRING, NULL, "Data Options...",      &OP_DataOptionsDef, 110},
 };
 
 static menuitem_t OP_P1ControlsMenu[] =
@@ -1694,19 +1691,19 @@ static menuitem_t OP_NetPlusOptionsMenu[] =
 {
 	{IT_HEADER, NULL, "Rollback netcode", NULL, 10},
 	{IT_CVAR | IT_STRING, NULL, "Enable simulation", &cv_simulate,   20}, //sim
-	{IT_CVAR | IT_STRING, NULL, "Tics of control lag cancelled out", &cv_simulatetics,   30}, //simtics
-	{IT_CVAR | IT_STRING, NULL, "Tics to reduce players' jumpness",     &cv_netsteadyplayers,   40}, //simsteadyplayers
-	{IT_CVAR | IT_STRING, NULL, "Do not simulate ring slinging",     &cv_netslingdelay,   50}, //simslingdelay
-	{IT_CVAR | IT_STRING, NULL, "Distance to simulate objects within",     &cv_simulateculldistance, 60}, //simcull
+	{IT_CVAR | IT_STRING, NULL, "Cancelled control lag tics", &cv_simulatetics,   30}, //simtics
+	{IT_CVAR | IT_STRING, NULL, "Player jitter reduction tics",     &cv_netsteadyplayers,   40}, //simsteadyplayers
+	{IT_CVAR | IT_STRING, NULL, "Turn off ring toss simulation",     &cv_netslingdelay,   50}, //simslingdelay
+	{IT_CVAR | IT_STRING, NULL, "Object simulation distance",     &cv_simulateculldistance, 60}, //simcull
 
 	{IT_HEADER, NULL, "Visuals", NULL, 80},
-	{IT_CVAR | IT_STRING, NULL, "Length and lifetime of players' trails",     &cv_nettrails,      90}, //simtrails
+	{IT_CVAR | IT_STRING, NULL, "Player trail lifetime",     &cv_nettrails,      90}, //simtrails
 
 	{IT_HEADER, NULL, "Server and client timers synch", NULL, 110},
-	{IT_CALL | IT_STRING, NULL, "Try to reduce game jitter manually",    M_NetPlusAutoTimeFudge,   120}, //autotimefudge
+	{IT_CALL | IT_STRING, NULL, "Attempt reducing game jitter",    M_NetPlusAutoTimeFudge,   120}, //autotimefudge
 
 	{IT_HEADER, NULL, "Debug", NULL, 140},
-	{IT_CVAR | IT_STRING, NULL, "NetPlus simulation statistics",      &cv_netsimstat, 150}, //netsimstat
+	{IT_CVAR | IT_STRING, NULL, "Simulation stats",      &cv_netsimstat, 150}, //netsimstat
 };
 
 // ==========================================================================
@@ -2291,11 +2288,11 @@ menu_t OP_EraseDataDef = DEFAULTMENUSTYLE(
 
 //Netplus options menu
 menu_t OP_NetPlusDef = DEFAULTMENUSTYLE(
-	MN_OP_MAIN,
-	"M_OPTTTL",
-	OP_NetPlusOptionsMenu,
-	&MainDef, 
-	10, 30);
+    MTREE2(MN_OP_MAIN, MN_OP_NETPLUS),
+    "M_OPTTTL",
+    OP_NetPlusOptionsMenu,
+    &OP_MainDef,
+    30, 30);
 
 // ==========================================================================
 // CVAR ONCHANGE EVENTS GO HERE
@@ -3698,8 +3695,8 @@ void M_StartControlPanel(void)
 	if (!Playing())
 	{
 		// Secret menu!
-		MainMenu[singleplr].alphaKey = (M_AnySecretUnlocked()) ? 68 : 76;
-		MainMenu[multiplr].alphaKey = (M_AnySecretUnlocked()) ? 76 : 84;
+		MainMenu[singleplr].alphaKey = (M_AnySecretUnlocked()) ? 76 : 84;
+		MainMenu[multiplr].alphaKey = (M_AnySecretUnlocked()) ? 84 : 92;
 		MainMenu[secrets].status = (M_AnySecretUnlocked()) ? (IT_STRING | IT_CALL) : (IT_DISABLED);
 
 		currentMenu = &MainDef;
@@ -6947,14 +6944,6 @@ static void M_Options(INT32 choice)
 
 	OP_MainDef.prevMenu = currentMenu;
 	M_SetupNextMenu(&OP_MainDef);
-}
-
-//NetPlus options menu
-static void M_NetPlusOptions(INT32 choice)
-{
-	(void)choice;
-	OP_NetPlusDef.prevMenu = currentMenu;
-	M_SetupNextMenu(&OP_NetPlusDef);
 }
 
 static void M_RetryResponse(INT32 ch)
@@ -13380,14 +13369,6 @@ static void M_DrawScreenshotMenu(void)
 	}
 #endif
 }
-
-// ===============
-// NetPlus Options Menu drawing routine
-// ===============
-// static void M_DrawNetPlusMenu(void)
-// {
-// 	M_DrawGenericScrollMenu();
-// }
 
 // ===============
 // Monitor Toggles
