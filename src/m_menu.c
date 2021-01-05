@@ -1689,21 +1689,24 @@ static menuitem_t OP_MonitorToggleMenu[] =
 //NetPlus options menu
 static menuitem_t OP_NetPlusOptionsMenu[] =
 {
-	{IT_HEADER, NULL, "Rollback netcode", NULL, 10},
-	{IT_CVAR | IT_STRING, NULL, "Enable simulation", &cv_simulate,   20}, //sim
+	{IT_HEADER, NULL, "Client Side Prediction", NULL, 10},
+	{IT_CVAR | IT_STRING, NULL, "Enable prediction", &cv_simulate,   20}, //sim
 	{IT_CVAR | IT_STRING, NULL, "Cancelled control lag tics", &cv_simulatetics,   30}, //simtics
 	{IT_CVAR | IT_STRING, NULL, "Player jitter reduction tics",     &cv_netsteadyplayers,   40}, //simsteadyplayers
-	{IT_CVAR | IT_STRING, NULL, "Turn off ring toss simulation",     &cv_netslingdelay,   50}, //simslingdelay
-	{IT_CVAR | IT_STRING, NULL, "Object simulation distance",     &cv_simulateculldistance, 60}, //simcull
+	{IT_CVAR | IT_STRING, NULL, "Turn off ring toss prediction",     &cv_netslingdelay,   50}, //simslingdelay
+	{IT_CVAR | IT_STRING, NULL, "Object prediction distance",     &cv_simulateculldistance, 60}, //simcull
+	{IT_CVAR | IT_STRING, NULL, "Prediction inaccuracy (beta)",     &cv_siminaccuracy, 70}, 
 
-	{IT_HEADER, NULL, "Visuals", NULL, 80},
-	{IT_CVAR | IT_STRING, NULL, "Player trail lifetime",     &cv_nettrails,      90}, //simtrails
+	{IT_HEADER, NULL, "Visuals", NULL, 90},
+	{IT_CVAR | IT_STRING, NULL, "Player trail lifetime",     &cv_nettrails,      100}, //simtrails
 
-	{IT_HEADER, NULL, "Server and client timers synch", NULL, 110},
-	{IT_CALL | IT_STRING, NULL, "Attempt reducing game jitter",    M_NetPlusAutoTimeFudge,   120}, //autotimefudge
+	{IT_HEADER, NULL, "Server and client timers synch", NULL, 120},
+	// {IT_CVAR | IT_STRING, NULL, "Enable auto time fudging",    M_NetPlusAutoTimeFudge,   130}, //autotimefudge
+	// {IT_CALL | IT_STRING, NULL, "Force reducing game jitter",    M_NetPlusAutoTimeFudge,   130}, //autotimefudge
+	{IT_CALL | IT_STRING, NULL, "Attempt reducing game jitter",    M_NetPlusAutoTimeFudge,   130}, //autotimefudge
 
-	{IT_HEADER, NULL, "Debug", NULL, 140},
-	{IT_CVAR | IT_STRING, NULL, "Simulation stats",      &cv_netsimstat, 150}, //netsimstat
+	{IT_HEADER, NULL, "Debug", NULL, 150},
+	{IT_CVAR | IT_STRING, NULL, "Simulation stats",      &cv_netsimstat, 160}, //netsimstat
 };
 
 // ==========================================================================

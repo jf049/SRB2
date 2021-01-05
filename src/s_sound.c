@@ -539,12 +539,14 @@ void S_StartSoundAtVolume(const void *origin_p, sfxenum_t sfx_id, INT32 volume)
 	if (S_SoundDisabled() || !sound_started)
 		return;
 
-	if (((simtic != targetsimtic - 1 && origin == listenmobj) || (origin != listenmobj && issimulation))) // local player sounds play immediately during simulations
-		return;
-
 	// Don't want a sound? Okay then...
 	if (sfx_id == sfx_None)
 		return;
+
+	// local player sounds play immediately during simulations
+	if (gamestate == GS_LEVEL) // and when we are actually playing
+		if (((simtic != targetsimtic - 1 && origin == listenmobj) || (origin != listenmobj && issimulation)))
+			return;
 
 	if (players[displayplayer].awayviewtics)
 		listenmobj = players[displayplayer].awayviewmobj;

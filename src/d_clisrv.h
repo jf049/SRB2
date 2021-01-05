@@ -611,7 +611,7 @@ boolean Playing(void);
 void D_QuitNetGame(void);
 
 //? How many ticks to run?
-void TryRunTics(tic_t realtic);
+void TryRunTics(tic_t realtic, tic_t entertic);
 
 // Invalidates save states used in simulations
 void InvalidateSavestates();

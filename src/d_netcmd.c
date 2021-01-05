@@ -392,13 +392,16 @@ consvar_t cv_simulatetics = { "simtics", "MAX", 0, simulateTics_cons_t, NULL, 0,
 static CV_PossibleValue_t simulateculldistance_cons_t[] = { {0, "MIN"}, {10000, "MAX"}, {0, NULL} };
 consvar_t cv_simulateculldistance = { "simcull", "MIN", 0, simulateculldistance_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL };
 
+static CV_PossibleValue_t siminaccuracy_cons_t[] = { {1, "MIN"}, {10, "MAX"}, {0, NULL} };
+consvar_t cv_siminaccuracy = { "siminaccuracy", "MIN", 0, siminaccuracy_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL };
+
 static CV_PossibleValue_t netsteadyplayers_cons_t[] = { {0, "MIN"}, {MAXSIMULATIONS - 1, "MAX"}, {0, NULL} };
 consvar_t cv_netsteadyplayers = { "simsteadyplayers", "0", 0, netsteadyplayers_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL };
 
 static CV_PossibleValue_t nettrails_cons_t[] = { {0, "MIN"}, {5, "MAX"}, {0, NULL} };
 consvar_t cv_nettrails = { "simtrails", "5", 0, nettrails_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL };
 
-consvar_t cv_netslingdelay = { "simslingdelay", "Off", 0, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL };
+consvar_t cv_netslingdelay = { "simslingdelay", "No", 0, CV_YesNo, NULL, 0, NULL, NULL, 0, 0, NULL };
 
 static CV_PossibleValue_t netdelay_cons_t[] = { {0, "MIN"}, {250, "MAX"}, {0, NULL} };
 consvar_t cv_netdelay = { "netdelay", "0", 0, netdelay_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL };
@@ -549,6 +552,7 @@ void D_RegisterServerCommands(void)
 	CV_RegisterVar(&cv_simulate);
 	CV_RegisterVar(&cv_simulatetics);
 	CV_RegisterVar(&cv_simulateculldistance);
+	CV_RegisterVar(&cv_siminaccuracy);
 	CV_RegisterVar(&cv_netdelay);
 	CV_RegisterVar(&cv_netjitter);
 	CV_RegisterVar(&cv_netsmoothing);
@@ -3904,6 +3908,7 @@ static void ExitMove_OnChange(void)
 }
 
 UINT32 timelimitintics = 0;
+UINT32 newtimelimit = 0;
 
 /** Deals with a timelimit change by printing the change to the console.
   * If the gametype is single player, cooperative, or race, the timelimit is
@@ -3917,24 +3922,24 @@ static void TimeLimit_OnChange(void)
 {
 	// Don't allow timelimit in Single Player/Co-Op/Race!
 	if (server && Playing() && cv_timelimit.value != 0 && !(gametyperules & GTR_TIMELIMIT))
-	{
+	{	
 		CV_SetValue(&cv_timelimit, 0);
 		return;
 	}
 
 	if (cv_timelimit.value != 0)
 	{
-		UINT32 newtimelimit = cv_timelimit.value * 60 * TICRATE;
+		newtimelimit = cv_timelimit.value * 60 * TICRATE;
 		//add hidetime for tag too!
 		if (G_TagGametype())
 			newtimelimit += hidetime * TICRATE;
 
 		if (newtimelimit != timelimitintics)
-		{
+		{ 
 			CONS_Printf(M_GetText("Levels will end after %d minute%s.\n"),cv_timelimit.value,cv_timelimit.value == 1 ? "" : "s"); // Graue 11-17-2003
 			timelimitintics = newtimelimit;
 		}
-
+		
 		// Note the deliberate absence of any code preventing
 		//   pointlimit and timelimit from being set simultaneously.
 		// Some people might like to use them together. It works.

@@ -838,6 +838,8 @@ void D_SRB2Loop(void)
 					hasAckedPackets = true;
 				}
 				else if (!I_NetCanGet() && I_GetTime() - oldentertics < 2)
+				//is this the reason why we get FPS drop during netgame
+				//with packet timings not fudged perfectly?
 				{
 					// wait a bit longer for a packet
 					I_Sleep();
@@ -875,7 +877,7 @@ void D_SRB2Loop(void)
 			realtics = 1;
 
 		// process tics (but maybe not if realtic == 0)
-		TryRunTics(realtics);
+		TryRunTics(realtics, entertic);
 
 		if (lastdraw || singletics || gametic > rendergametic)
 		{

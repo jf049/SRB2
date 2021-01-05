@@ -12855,10 +12855,13 @@ void P_PlayerAfterThink(player_t *player)
 //Turns player's mobj and its camera
 void P_SetPlayerAngle(player_t *player, angle_t angle)
 {
+	if (!issimulation)
+	{
 		INT16 delta = (INT16)(angle >> 16) - player->angleturn;
 
 		P_ForceLocalAngle(player, P_GetLocalAngle(player) + (delta << 16));
 		player->angleturn += delta;
+	}
 }
 
 void P_SetLocalAngle(player_t *player, angle_t angle)
@@ -12866,15 +12869,17 @@ void P_SetLocalAngle(player_t *player, angle_t angle)
 	// if ((canSimulate && lastsimtic == simtic) || !canSimulate) //do not turn the camera for every simulation happening
 	// {
 	// 	CONS_Printf("Rotating during sim at %d for %d, delta %d \n", lastsimtic, gametic, lastsimtic-gametic);
-	INT16 delta = (INT16)((angle - P_GetLocalAngle(player)) >> 16);
+	if (!issimulation)
+	{
+		INT16 delta = (INT16)((angle - P_GetLocalAngle(player)) >> 16);
 
-	P_ForceLocalAngle(player, P_GetLocalAngle(player) + (angle_t)(delta << 16));
+		P_ForceLocalAngle(player, P_GetLocalAngle(player) + (angle_t)(delta << 16));
 
-	if (player == &players[consoleplayer])
-		ticcmd_oldangleturn[0] += delta;
-	else if (player == &players[secondarydisplayplayer])
-		ticcmd_oldangleturn[1] += delta;
-	// }
+		if (player == &players[consoleplayer])
+			ticcmd_oldangleturn[0] += delta;
+		else if (player == &players[secondarydisplayplayer])
+			ticcmd_oldangleturn[1] += delta;
+	}
 }
 
 angle_t P_GetLocalAngle(player_t *player)

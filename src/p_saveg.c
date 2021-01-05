@@ -5294,6 +5294,7 @@ boolean P_LoadGameState(const savestate_t* savestate)
 
 void P_GameStateFreeMemory(savestate_t* savestate)
 {
+	//TODO do not call Z_Free when we're playing, just NULL it
 	Z_Free(savestate->buffer);
 	savestate->buffer = NULL; //a hacky way to ensure that the buffer is empty
 }
