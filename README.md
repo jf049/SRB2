@@ -5,9 +5,9 @@
 This repo is a WIP fork of LXShades/SRB2/netplus branch. Expect things to be broken.
 
 ## Known issues
-- BACKUPTICS reduced from 1024 to 96 to combat memory heap overflow on x86 builds
 - BLUA is not properly simulated. Client-side LUAs work.
-- Camera (locamaiming) does not synch immediatelly when it's being changed during simulations.
+- Camera and "locamaiming" does not synch immediatelly when it's being changed during simulations.
+- Prediction inaccuracy feature doesn't work well in poor network connections
 
 ## Dependencies
 - NASM (x86 builds only)
