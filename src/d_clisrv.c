@@ -5816,14 +5816,13 @@ void TryRunTics(tic_t realtics, tic_t entertic)
 							}
 						
 					}
+					targetsimtic = gametic + 1;
 
 					G_Ticker((gametic % NEWTICRATERATIO) == 0); //process the game logic
 					ExtraDataTicker();
 					gametic++; //advance gametic to the next one, means we processed all game logic already
 					simtic = gametic; //revert current simtick value back to last processed real tic
-					targetsimtic = simtic;
 					consistancy[gametic % BACKUPTICS] = Consistancy();
-
 					rs_tictime = I_GetTimeMicros() - rs_tictime;
 					if (recordingStates)
 					{
@@ -5847,7 +5846,8 @@ void TryRunTics(tic_t realtics, tic_t entertic)
 			}
 		}
 		else
-			targetsimtic = simtic + 1; //simulate the latest simulation, haha!	
+			if (canSimulate)
+				targetsimtic = simtic + 1; //simulate the latest simulation, haha!	
 
 		// collect net condition data, it's needed for calculating correct netcmds
 		if (netgame)

@@ -1757,6 +1757,8 @@ void *W_CachePatchNum(lumpnum_t lumpnum, INT32 tag)
 
 void W_UnlockCachedPatch(void *patch)
 {
+	if (!patch)
+		return;
 	// The hardware code does its own memory management, as its patches
 	// have different lifetimes from software's.
 #ifdef HWRENDER
