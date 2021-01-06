@@ -122,6 +122,7 @@ boolean canSimulate;
 tic_t lastsimtic;	
 
 tic_t gametic;
+tic_t neededtic;
 tic_t levelstarttic; // gametic at level start
 UINT32 ssspheres; // old special stage
 INT16 lastmap; // last level you were at (returning from special stages)

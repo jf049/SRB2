@@ -127,7 +127,6 @@ static UINT8 mynode; // my address pointofview server
 
 static UINT8 localtextcmd[MAXTEXTCMD];
 static UINT8 localtextcmd2[MAXTEXTCMD]; // splitscreen
-static tic_t neededtic;
 SINT8 servernode = 0; // the number of the server node
 /// \brief do we accept new players?
 /// \todo WORK!
@@ -5773,7 +5772,7 @@ void TryRunTics(tic_t realtics, tic_t entertic)
 	if (neededtic > gametic && !resynch_local_inprogress)
 	{
 		// First, run the real game as received from the server if needed
-		// We always run real game when singleplayer or not in a level
+		// We always run real game when in singleplayer or not in a level
 
 		if (!(gamestate == GS_LEVEL) // we are not in a level
 			// we are in a level, in a netgame, it's an N livetic (but not gametic because the game can lag)
@@ -5814,7 +5813,6 @@ void TryRunTics(tic_t realtics, tic_t entertic)
 							{
 								netcmds[gametic % BACKUPTICS][i] = gameTicBuffer2[gametic % MAXSIMULATIONS][i];
 							}
-						
 					}
 					targetsimtic = gametic + 1;
 
@@ -5835,6 +5833,7 @@ void TryRunTics(tic_t realtics, tic_t entertic)
 						}
 
 						// store the ticcmds used during this game tic for simulations
+						// TODO optimize it in a way that they won't be saved when we finished chasing server's gamestate 
 						for (int i = 0; i < MAXPLAYERS; i++)
 							gameTicBuffer[gametic % MAXSIMULATIONS][i] = netcmds[(gametic - 1) % BACKUPTICS][i];
 					}

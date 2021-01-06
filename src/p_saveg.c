@@ -3711,6 +3711,9 @@ static void P_LocalArchiveThinkers(void)
 		for (thinker = thlist[i].next; thinker != &thlist[i]; thinker = thinker->next)
 		{
 			actionf_p1 acp1 = thinker->function.acp1;
+			if (acp1 == (actionf_p1)P_RemoveThinkerDelayed
+			  || acp1 == (actionf_p1)P_NullPrecipThinker)
+				continue;
 
 			// find the associated special def
 			for (j = 0; j < sizeof(specialDefs) / sizeof(specialDefs[0]); j++)
@@ -3785,14 +3788,15 @@ static void P_LocalUnArchiveThinkers()
 {
 	thinker_t *thinker;
 	mobj_t* mobj;
+	mobj_t* currentmobj;
 	UINT8 tclass;
 	UINT8 restoreAdditionalStuff = false;
-	INT32 i, j, list;
+	int32_t i, j, list;
 	int skyviewid = 0;
 	int skycenterid = 0;
 	thinker_t newthinkers[NUM_THINKERLISTS] = { 0 };
 	static thinker_t* thinkersbytype[tc_end][16384];
-	static int numthinkersbytype[tc_end];
+	static uint32_t numthinkersbytype[tc_end];
 	static mobjloclink_t mobjByLoc[32768][MAXNUMMOBJSBYLOC];
 	static int numMobjsByLoc[32768];
 	static mobj_t* mobjByNum[16384];
@@ -3828,7 +3832,7 @@ static void P_LocalUnArchiveThinkers()
 
 		for (thinker = thlist[i].next; thinker != &thlist[i]; thinker = thinker->next)
 		{
-			if (thinker->function.acp1 == P_RemoveThinkerDelayed)
+			if (thinker->function.acp1 == P_RemoveThinkerDelayed || thinker->function.acp1 == (actionf_p1)P_NullPrecipThinker)
 				continue;
 			for (j = 0; j < tc_end; j++)
 			{
@@ -3923,8 +3927,7 @@ static void P_LocalUnArchiveThinkers()
 			{
 				for (j = numthinkersbytype[tclass] - 1; j >= 0; j--)
 				{
-					//TODO: FIX CRASH HERE
-					if (thinkersbytype[tclass][j] == NULL)
+					if (!thinkersbytype[tclass][j])
 					{
 						numthinkersbytype[tclass]--;
 						continue;
@@ -4469,8 +4472,6 @@ static void P_NetUnArchiveThinkers(boolean preserveLevel)
 			delay->caller = P_FindNewPosition(mobjnum);
 		}
 	}
-	//TODO: FIX BUG WITH SKYBOX ON NIMBUS RUINS
-	// restore skyboxes, if applicable
 	for (i = 0; i < sizeof(skyboxmo) / sizeof(skyboxmo[0]); i++)
 		skyboxmo[i] = NULL;
 	for (i = 0; i < sizeof(skyboxcenterpnts) / sizeof(skyboxcenterpnts[0]); i++)
@@ -5284,7 +5285,7 @@ boolean P_LoadGameState(const savestate_t* savestate)
 #endif
 
 	// This is stupid and hacky _squared_, but it's in the net load code and it says it might work, so I guess it might work!
-	// P_SetRandSeed(P_GetInitSeed());
+	P_SetRandSeed(P_GetInitSeed());
 	
 	P_UnArchiveLuabanksAndConsistency();
 	loadStateBenchmark = I_GetTimeUs() - time;
