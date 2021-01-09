@@ -3282,13 +3282,13 @@ static void P_KillPlayer(player_t *player, mobj_t *source, INT32 damage)
 		if (!G_GametypeHasTeams() || !(source->player->ctfteam == player->ctfteam && source != player->mo))
 		{
 			P_AddPlayerScore(source->player, 100);
-			if (!issimulation)
-			{
-				P_AddPlayerHitCount(source->player);
-				P_AddPlayerKillCount(source->player);
-				P_AddPlayerTimesHitCount(player);
-				// P_AddPlayerDeathCount(player);
-			}
+			// if (!issimulation)
+			// {
+			// 	P_AddPlayerHitCount(source->player);
+			// 	P_AddPlayerKillCount(source->player);
+			// 	P_AddPlayerTimesHitCount(player);
+			// 	// P_AddPlayerDeathCount(player);
+			// }
 		}
 	}
 
