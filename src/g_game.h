@@ -32,6 +32,7 @@ extern char  player_names[MAXPLAYERS][MAXPLAYERNAME+1];
 extern INT32 player_name_changes[MAXPLAYERS];
 
 extern player_t players[MAXPLAYERS];
+extern playermatchstats_t playermatchstats[MAXPLAYERS];
 extern boolean playeringame[MAXPLAYERS];
 
 // gametic at level start

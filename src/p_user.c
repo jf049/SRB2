@@ -1447,6 +1447,101 @@ void P_AddPlayerScore(player_t *player, UINT32 amount)
 	}
 }
 
+// Increases hit count
+void P_AddPlayerHitCount(player_t *player)
+{
+	if (player->bot)
+	{
+		playermatchstats[secondarydisplayplayer].hits++;
+		return;
+	}
+	for (int i = 0; i < MAXPLAYERS; i++)
+	{
+		if (player == &players[i])
+		{
+			playermatchstats[i].hits++;
+			break;
+		}
+	}
+}
+
+void P_AddPlayerTimesHitCount(player_t *player)
+{
+	if (player->bot)
+	{
+		playermatchstats[secondarydisplayplayer].timeshit++;
+		return;
+	}
+	for (int i = 0; i < MAXPLAYERS; i++)
+	{
+		if (player == &players[i])
+		{
+			playermatchstats[i].timeshit++;
+			break;
+		}
+	}
+}
+
+void P_AddPlayerKillCount(player_t *player)
+{
+	if (player->bot)
+	{
+		playermatchstats[secondarydisplayplayer].kills++;
+		return;
+	}
+	for (int i = 0; i < MAXPLAYERS; i++)
+	{
+		if (player == &players[i])
+		{
+			playermatchstats[i].kills++;
+			break;
+		}
+	}
+}
+
+void P_AddPlayerDeathCount(player_t *player)
+{
+	if (player->bot)
+	{
+		playermatchstats[secondarydisplayplayer].deaths++;
+		return;
+	}
+	for (int i = 0; i < MAXPLAYERS; i++)
+	{
+		if (player == &players[i])
+		{
+			playermatchstats[i].deaths++;
+			break;
+		}
+	}
+}
+
+void P_ClearMatchStatsForPlayer(player_t *player)
+{
+	for (int i = 0; i < MAXPLAYERS; i++)
+	{
+		if (player == &players[i])
+		{
+			playermatchstats[i].hits = 0;
+			playermatchstats[i].timeshit = 0;
+			playermatchstats[i].kills = 0;
+			playermatchstats[i].deaths = 0;
+			break;
+		}
+	}
+}
+
+void P_ClearMatchStatsForPlayers()
+{
+	for (int i = 0; i < MAXPLAYERS; i++)
+	{
+			playermatchstats[i].hits = 0;
+			playermatchstats[i].timeshit = 0;
+			playermatchstats[i].kills = 0;
+			playermatchstats[i].deaths = 0;
+	}
+}
+
 // Steals from every enemy's score.
 void P_StealPlayerScore(player_t *player, UINT32 amount)
 {
@@ -1632,7 +1727,7 @@ void P_RestoreMusic(player_t *player)
 	// Super
 	else if (player->powers[pw_super] && !(mapheaderinfo[gamemap-1]->levelflags & LF_NOSSMUSIC)
 		&& !S_RecallMusic(JT_SUPER, false))
-		P_PlayJingle(player, JT_SUPER);
+			P_PlayJingle(player, JT_SUPER);
 
 	// Invulnerability
 	else if (player->powers[pw_invulnerability] > 1 && !player->powers[pw_super])

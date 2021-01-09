@@ -3815,14 +3815,11 @@ static void P_LocalUnArchiveThinkers()
 	// preserve sky box indexes
 	for (i = 0; i < 16; i++)
 	{
-		if (skyboxmo[0] == skyboxviewpnts[i])
+		if (skyboxmo[0] && skyboxmo[0] == skyboxviewpnts[i])
 			skyviewid = i; // save id just in case
-		if (skyboxmo[1] == skyboxcenterpnts[i])
+		if (skyboxmo[1] && skyboxmo[1] == skyboxcenterpnts[i])
 			skycenterid = i; // save id just in case
-		skyboxviewpnts[i] = NULL;
-		skyboxcenterpnts[i] = NULL;
 	}
-	skyboxmo[0] = skyboxmo[1] = NULL;
 
 	// sort thinkers into maps to speed up replacement searches
 	for (i = 0; i < NUM_THINKERLISTS; i++)
@@ -3890,7 +3887,7 @@ static void P_LocalUnArchiveThinkers()
 			sector_t* preserveSubsector = NULL;
 
 			tclass = READUINT8(save_p);
-
+			
 			if (tclass == 0xFF)
 				break; // next list
 
@@ -4150,6 +4147,14 @@ static void P_LocalUnArchiveThinkers()
 		}
 	}
 
+	for (i = 0; i < sizeof(skyboxmo) / sizeof(skyboxmo[0]); i++)
+		skyboxmo[i] = NULL;
+	for (i = 0; i < sizeof(skyboxcenterpnts) / sizeof(skyboxcenterpnts[0]); i++)
+	{
+		skyboxcenterpnts[i] = NULL;
+		skyboxviewpnts[i] = NULL;
+	}
+
 	// restore pointers
 #define RELINK(var) if (var) { UINT32 index = (UINT32)var; var = NULL; P_SetTarget(&var, mobjByNum[index]); }
 	for (thinker = thlist[THINK_MOBJ].next; thinker != &thlist[THINK_MOBJ]; thinker = thinker->next)
@@ -4200,6 +4205,22 @@ static void P_LocalUnArchiveThinkers()
 #undef RELINK
 
 	// restore skyboxes
+
+	for (currentmobj = (mobj_t*)thlist[THINK_MOBJ].next; currentmobj != (mobj_t*)&thlist[THINK_MOBJ]; currentmobj = (mobj_t*)currentmobj->thinker.next)
+	{
+		if (currentmobj->type == MT_SKYBOX)
+		{
+			if ((currentmobj->extravalue2 >> 16) == 1)
+			{
+				skyboxcenterpnts[currentmobj->extravalue2 & 0xFFFF] = currentmobj;
+			}
+			else
+			{
+				skyboxviewpnts[currentmobj->extravalue2 & 0xFFFF] = currentmobj;
+			}
+		}
+	}
+
 	skyboxmo[0] = skyboxviewpnts[(skyviewid >= 0) ? skyviewid : 0];
 	skyboxmo[1] = skyboxcenterpnts[(skycenterid >= 0) ? skycenterid : 0];
 }
@@ -5238,10 +5259,8 @@ void P_SaveGameState(savestate_t* savestate)
 
 	// TODO: Make new P_NetArchiveRandSeed()
 
-#ifdef HAVE_BLUA
 	LUA_Archive();
-#endif
-
+	// LUA_LocalArchive();
 	P_ArchiveLuabanksAndConsistency();
 
 	saveStateBenchmark = I_GetTimeUs() - time;
@@ -5280,12 +5299,10 @@ boolean P_LoadGameState(const savestate_t* savestate)
 	P_NetUnArchiveSpecials();
 	P_LocalUnArchiveCameras();
 
-#ifdef HAVE_BLUA
 	LUA_UnArchive();
-#endif
-
+	// LUA_LocalUnArchive();
 	// This is stupid and hacky _squared_, but it's in the net load code and it says it might work, so I guess it might work!
-	P_SetRandSeed(P_GetInitSeed());
+	// P_SetRandSeed(P_GetInitSeed());
 	
 	P_UnArchiveLuabanksAndConsistency();
 	loadStateBenchmark = I_GetTimeUs() - time;

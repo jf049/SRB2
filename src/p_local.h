@@ -125,6 +125,13 @@ void CV_UpdateCam2Dist(void);
 extern fixed_t t_cam_dist, t_cam_height, t_cam_rotate;
 extern fixed_t t_cam2_dist, t_cam2_height, t_cam2_rotate;
 
+void P_AddPlayerHitCount(player_t *player);
+void P_AddPlayerTimesHitCount(player_t *player);
+void P_AddPlayerKillCount(player_t *player);
+void P_AddPlayerDeathCount(player_t *player);
+void P_ClearMatchStatsForPlayer(player_t *player);
+void P_ClearMatchStatsForPlayers();
+
 INT32 P_GetPlayerControlDirection(player_t *player);
 void P_AddPlayerScore(player_t *player, UINT32 amount);
 void P_StealPlayerScore(player_t *player, UINT32 amount);

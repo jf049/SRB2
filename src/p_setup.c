@@ -3940,6 +3940,7 @@ static void P_InitGametype(void)
   */
 boolean P_LoadLevel(boolean fromnetsave)
 {
+	P_ClearMatchStatsForPlayers();
 	if (issimulation)
 	{
 		return true;

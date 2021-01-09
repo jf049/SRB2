@@ -4299,9 +4299,12 @@ void A_Invincibility(mobj_t *actor)
 	{
 		if (mariomode)
 			G_GhostAddColor(GHC_INVINCIBLE);
-		P_PlayJingle(player, (mariomode) ? JT_MINV : JT_INV);
-		strlcpy(S_sfx[sfx_None].caption, "Invincibility", 14);
-		S_StartCaption(sfx_None, -1, player->powers[pw_invulnerability]);
+		if (cv_powerupmusic.value == true)
+		{
+			P_PlayJingle(player, (mariomode) ? JT_MINV : JT_INV);
+			strlcpy(S_sfx[sfx_None].caption, "Invincibility", 14);
+			S_StartCaption(sfx_None, -1, player->powers[pw_invulnerability]);
+		}
 	}
 }
 
@@ -4331,12 +4334,15 @@ void A_SuperSneakers(mobj_t *actor)
 
 	if (P_IsLocalPlayer(player) && !player->powers[pw_super])
 	{
-		if (S_SpeedMusic(0.0f) && (mapheaderinfo[gamemap-1]->levelflags & LF_SPEEDMUSIC))
-			S_SpeedMusic(1.4f);
-		else
-			P_PlayJingle(player, JT_SHOES);
-		strlcpy(S_sfx[sfx_None].caption, "Speed shoes", 12);
-		S_StartCaption(sfx_None, -1, player->powers[pw_sneakers]);
+		if (cv_powerupmusic.value == true)
+		{
+			if (S_SpeedMusic(0.0f) && (mapheaderinfo[gamemap-1]->levelflags & LF_SPEEDMUSIC))
+				S_SpeedMusic(1.4f);
+			else
+				P_PlayJingle(player, JT_SHOES);
+			strlcpy(S_sfx[sfx_None].caption, "Speed shoes", 12);
+			S_StartCaption(sfx_None, -1, player->powers[pw_sneakers]);
+		}
 	}
 }
 

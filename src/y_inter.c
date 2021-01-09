@@ -719,7 +719,16 @@ dontdrawbg:
 				if (data.match.numplayers > 9)
 				{
 					if (intertype == int_match)
+					{
 						V_DrawRightAlignedString(x+152, y, 0, va("%i", data.match.scores[i]));
+						if (cv_hitcounters.value == true)
+						{
+							V_DrawSmallString(x + 40, y + 9, V_ALLOWLOWERCASE, va("H: %u", playermatchstats[data.match.num[i]].hits));
+							V_DrawSmallString(x + 63, y + 9, V_ALLOWLOWERCASE, va("TH: %u", playermatchstats[data.match.num[i]].timeshit));
+							V_DrawSmallString(x + 88, y + 9, V_ALLOWLOWERCASE, va("K: %u", playermatchstats[data.match.num[i]].kills));
+							V_DrawSmallString(x + 110, y + 9, V_ALLOWLOWERCASE, va("D: %i", playermatchstats[data.match.num[i]].deaths));
+						}
+					}
 					else if (intertype == int_race)
 					{
 						if (players[data.match.num[i]].pflags & PF_GAMETYPEOVER)
@@ -737,7 +746,16 @@ dontdrawbg:
 				else
 				{
 					if (intertype == int_match)
+					{
 						V_DrawRightAlignedString(x+152+BASEVIDWIDTH/2, y, 0, va("%u", data.match.scores[i]));
+						if (cv_hitcounters.value == true)
+						{
+							V_DrawSmallString(x + 40, y + 9, V_ALLOWLOWERCASE, va("Hits: %u", playermatchstats[data.match.num[i]].hits));
+							V_DrawSmallString(x + 80, y + 9, V_ALLOWLOWERCASE, va("Times Hit: %u", playermatchstats[data.match.num[i]].timeshit));
+							V_DrawSmallString(x + 140, y + 9, V_ALLOWLOWERCASE, va("Kills: %u", playermatchstats[data.match.num[i]].kills));
+							V_DrawSmallString(x + 180, y + 9, V_ALLOWLOWERCASE, va("Deaths: %i", playermatchstats[data.match.num[i]].deaths));
+						}
+					}
 					else if (intertype == int_race)
 					{
 						if (players[data.match.num[i]].pflags & PF_GAMETYPEOVER)
@@ -805,6 +823,13 @@ dontdrawbg:
 					x = 4 + (BASEVIDWIDTH/2);
 					y = (redplayers * 16) + 32;
 					V_DrawCenteredString(x+6, y, 0, va("%d", redplayers));
+					if (cv_hitcounters.value == true)
+					{
+						V_DrawSmallString(x + 40, y + 9, 0, va("H: %u", playermatchstats[i].hits));
+						V_DrawSmallString(x + 63, y + 9, 0, va("TH: %u", playermatchstats[data.match.num[i]].timeshit));
+						V_DrawSmallString(x + 88, y + 9, 0, va("K: %u", playermatchstats[data.match.num[i]].kills));
+						V_DrawSmallString(x + 110, y + 9, 0, va("D: %i", playermatchstats[data.match.num[i]].deaths));
+					}
 				}
 				else if (*data.match.color[i] == SKINCOLOR_BLUE) //blue
 				{
@@ -813,6 +838,13 @@ dontdrawbg:
 					x = 4;
 					y = (blueplayers * 16) + 32;
 					V_DrawCenteredString(x+6, y, 0, va("%d", blueplayers));
+					if (cv_hitcounters.value == true)
+					{
+						V_DrawSmallString(x + 40, y + 9, 0, va("H: %u", playermatchstats[data.match.num[i]].hits));
+						V_DrawSmallString(x + 63, y + 9, 0, va("TH: %u", playermatchstats[data.match.num[i]].timeshit));
+						V_DrawSmallString(x + 88, y + 9, 0, va("K: %u", playermatchstats[data.match.num[i]].kills));
+						V_DrawSmallString(x + 110, y + 9, 0, va("D: %i", playermatchstats[data.match.num[i]].deaths));
+					}
 				}
 				else
 					continue;

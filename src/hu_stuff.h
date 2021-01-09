@@ -57,6 +57,11 @@ typedef struct
 	INT32 color;
 	INT32 emeralds;
 	const char *name;
+	UINT32 hits;
+	UINT32 timeshit;
+	UINT32 kills;
+	UINT32 deaths;
+	float_t ratio;
 } playersort_t;
 
 //------------------------------------

@@ -2309,6 +2309,45 @@ void HU_DrawTabRankings(INT32 x, INT32 y, playersort_t *tab, INT32 scorelines, I
 		             | (greycheck ? V_60TRANS : 0)
 		             | V_ALLOWLOWERCASE, tab[i].name);
 
+		// if (cv_scoreboardmatchstats.value == true)
+		// {
+			// V_DrawString(x + 20, y,
+		    //          ((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0)
+		    //          | (greycheck ? V_60TRANS : 0)
+		    //          | V_ALLOWLOWERCASE, tab[i].name);
+			// hits
+		if (cv_hitcounters.value == true)
+		{
+			V_DrawSmallString(x + 22, y + 9, //x, y
+		             ((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+		             | (greycheck ? V_60TRANS : 0)
+		             | V_ALLOWLOWERCASE,
+					 va("Hits: %u", tab[i].hits)); //string
+			V_DrawSmallString(x + 60, y + 9, //x, y
+		             ((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+		             | (greycheck ? V_60TRANS : 0)
+		             | V_ALLOWLOWERCASE,
+					 va("Times hit: %u", tab[i].timeshit)); //string
+			V_DrawSmallString(x + 120, y + 9, //x, y
+		             ((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+		             | (greycheck ? V_60TRANS : 0)
+		             | V_ALLOWLOWERCASE,
+					 va("Kills: %u", tab[i].kills)); //string
+			V_DrawSmallString(x + 160, y + 9, //x, y
+		             ((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+		             | (greycheck ? V_60TRANS : 0)
+		             | V_ALLOWLOWERCASE,
+					 va("Deaths: %u", tab[i].deaths)); //string
+		}
+			// char ratio[5];
+			// gcvt(tab[i].ratio, 3, ratio);
+			// V_DrawSmallThinString(x + 32, y + 2, //x, y
+		    //          ((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+		    //          | (greycheck ? V_60TRANS : 0)
+		    //          | V_ALLOWLOWERCASE,
+			// 		 "H/WH: " + ratio); //string
+		// }
+
 		// Draw emeralds
 		if (players[tab[i].num].powers[pw_invulnerability] && (players[tab[i].num].powers[pw_invulnerability] == players[tab[i].num].powers[pw_sneakers]) && ((leveltime/7) & 1))
 			HU_DrawEmeralds(x-12,y+2,255);
@@ -2459,6 +2498,29 @@ static void HU_Draw32TeamTabRankings(playersort_t *tab, INT32 whiteplayer)
 		             ((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0)
 		             | (greycheck ? 0 : V_TRANSLUCENT)
 		             | V_ALLOWLOWERCASE, name);
+		// if (cv_hitcounters.value == true)
+		// {
+		// V_DrawSmallString(x + 22, y + 9, //x, y
+		// 			((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+		// 			| (greycheck ? V_60TRANS : 0)
+		// 			| V_ALLOWLOWERCASE,
+		// 			va("H: %u", tab[i].hits)); //string
+		// V_DrawSmallString(x + 45, y + 9, //x, y
+		// 			((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+		// 			| (greycheck ? V_60TRANS : 0)
+		// 			| V_ALLOWLOWERCASE,
+		// 			va("TH: %u", tab[i].timeshit)); //string
+		// V_DrawSmallString(x + 71, y + 9, //x, y
+		// 			((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+		// 			| (greycheck ? V_60TRANS : 0)
+		// 			| V_ALLOWLOWERCASE,
+		// 			va("K: %u", tab[i].kills)); //string
+		// V_DrawSmallString(x + 92, y + 9, //x, y
+		// 			((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+		// 			| (greycheck ? V_60TRANS : 0)
+		// 			| V_ALLOWLOWERCASE,
+		// 			va("D: %u", tab[i].deaths)); //string
+		// }
 
 		if (gametyperules & GTR_TEAMFLAGS)
 		{
@@ -2587,6 +2649,29 @@ void HU_DrawTeamTabRankings(playersort_t *tab, INT32 whiteplayer)
 		             ((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0)
 		             | (greycheck ? V_TRANSLUCENT : 0)
 		             | V_ALLOWLOWERCASE, name);
+		if (cv_hitcounters.value == true)
+		{
+		V_DrawSmallString(x + 22, y + 9, //x, y
+					((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+					| (greycheck ? V_60TRANS : 0)
+					| V_ALLOWLOWERCASE,
+					va("H: %u", tab[i].hits)); //string
+		V_DrawSmallString(x + 45, y + 9, //x, y
+					((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+					| (greycheck ? V_60TRANS : 0)
+					| V_ALLOWLOWERCASE,
+					va("TH: %u", tab[i].timeshit)); //string
+		V_DrawSmallString(x + 71, y + 9, //x, y
+					((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+					| (greycheck ? V_60TRANS : 0)
+					| V_ALLOWLOWERCASE,
+					va("K: %u", tab[i].kills)); //string
+		V_DrawSmallString(x + 92, y + 9, //x, y
+					((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+					| (greycheck ? V_60TRANS : 0)
+					| V_ALLOWLOWERCASE,
+					va("D: %u", tab[i].deaths)); //string
+		}
 
 		if (gametyperules & GTR_TEAMFLAGS)
 		{
@@ -2661,6 +2746,29 @@ void HU_DrawDualTabRankings(INT32 x, INT32 y, playersort_t *tab, INT32 scoreline
 		             ((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0)
 		             | (greycheck ? V_TRANSLUCENT : 0)
 		             | V_ALLOWLOWERCASE, name);
+		if (cv_hitcounters.value == true)
+		{
+		V_DrawSmallString(x + 22, y + 9, //x, y
+					((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+					| (greycheck ? V_60TRANS : 0)
+					| V_ALLOWLOWERCASE,
+					va("H: %u", tab[i].hits)); //string
+		V_DrawSmallString(x + 45, y + 9, //x, y
+					((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+					| (greycheck ? V_60TRANS : 0)
+					| V_ALLOWLOWERCASE,
+					va("TH: %u", tab[i].timeshit)); //string
+		V_DrawSmallString(x + 71, y + 9, //x, y
+					((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+					| (greycheck ? V_60TRANS : 0)
+					| V_ALLOWLOWERCASE,
+					va("K: %u", tab[i].kills)); //string
+		V_DrawSmallString(x + 92, y + 9, //x, y
+					((tab[i].num == whiteplayer) ? V_YELLOWMAP : 0) //option
+					| (greycheck ? V_60TRANS : 0)
+					| V_ALLOWLOWERCASE,
+					va("D: %u", tab[i].deaths)); //string
+		}
 
 		if (G_GametypeUsesLives() && !(G_GametypeUsesCoopLives() && (cv_cooplives.value == 0 || cv_cooplives.value == 3)) && (players[tab[i].num].lives != INFLIVES)) //show lives
 			V_DrawRightAlignedString(x, y+4, V_ALLOWLOWERCASE, va("%dx", players[tab[i].num].lives));
@@ -3058,6 +3166,14 @@ static void HU_DrawRankings(void)
 					tab[scorelines].color = players[i].skincolor;
 					tab[scorelines].name = player_names[i];
 					tab[scorelines].emeralds = players[i].powers[pw_emeralds];
+					if (gametyperankings[gametype] != GT_COOP || gametyperankings[gametype] != GT_RACE || gametyperankings[gametype] != GT_COMPETITION)
+					{
+						tab[scorelines].hits = playermatchstats[i].hits;
+						tab[scorelines].timeshit = playermatchstats[i].timeshit;
+						tab[scorelines].kills = playermatchstats[i].kills;
+						tab[scorelines].deaths = playermatchstats[i].deaths;
+						// tab[scorelines].ratio = playermatchstats[i].hits / playermatchstats[i].timeshit;
+					}
 				}
 			}
 		}

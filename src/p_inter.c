@@ -2590,6 +2590,8 @@ void P_KillMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, UINT8 damaget
 			}
 		}
 		target->player->playerstate = PST_DEAD;
+		if (!issimulation)
+			P_AddPlayerDeathCount(target->player);
 
 		if (target->player == &players[consoleplayer])
 		{
@@ -2645,7 +2647,15 @@ void P_KillMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source, UINT8 damaget
 	}
 
 	if (source && target && target->player && source->player)
+	{
 		P_PlayVictorySound(source); // Killer laughs at you. LAUGHS! BWAHAHAHA!
+		if (!issimulation)
+		{
+			P_AddPlayerHitCount(source->player);
+			P_AddPlayerKillCount(source->player);
+			P_AddPlayerTimesHitCount(target->player);
+		}
+	}
 
 	// Other death animation effects
 	switch(target->type)
@@ -3106,7 +3116,12 @@ static boolean P_TagDamage(mobj_t *target, mobj_t *inflictor, mobj_t *source, IN
 	// The tag occurs so long as you aren't shooting another tagger with friendlyfire on.
 	if (source->player->pflags & PF_TAGIT && !(player->pflags & PF_TAGIT))
 	{
-		P_AddPlayerScore(source->player, 100); //award points to tagger.
+		if (!issimulation)
+		{
+			P_AddPlayerScore(source->player, 100); //award points to tagger.
+			P_AddPlayerHitCount(source->player);
+			P_AddPlayerTimesHitCount(player);
+		}
 		P_HitDeathMessages(player, inflictor, source, 0);
 
 		if (!(gametyperules & GTR_HIDEFROZEN)) //survivor
@@ -3265,7 +3280,16 @@ static void P_KillPlayer(player_t *player, mobj_t *source, INT32 damage)
 	{
 		// Award no points when players shoot each other when cv_friendlyfire is on.
 		if (!G_GametypeHasTeams() || !(source->player->ctfteam == player->ctfteam && source != player->mo))
+		{
 			P_AddPlayerScore(source->player, 100);
+			if (!issimulation)
+			{
+				P_AddPlayerHitCount(source->player);
+				P_AddPlayerKillCount(source->player);
+				P_AddPlayerTimesHitCount(player);
+				// P_AddPlayerDeathCount(player);
+			}
+		}
 	}
 
 	// If the player was super, tell them he/she ain't so super nomore.
@@ -3390,7 +3414,14 @@ static void P_ShieldDamage(player_t *player, mobj_t *inflictor, mobj_t *source, 
 	{
 		// Award no points when players shoot each other when cv_friendlyfire is on.
 		if (!G_GametypeHasTeams() || !(source->player->ctfteam == player->ctfteam && source != player->mo))
+		{
 			P_AddPlayerScore(source->player, 50);
+			if (!issimulation)
+			{
+				P_AddPlayerHitCount(source->player);
+				P_AddPlayerTimesHitCount(player);
+			}
+		}
 	}
 }
 
@@ -3407,7 +3438,14 @@ static void P_RingDamage(player_t *player, mobj_t *inflictor, mobj_t *source, IN
 	{
 		// Award no points when players shoot each other when cv_friendlyfire is on.
 		if (!G_GametypeHasTeams() || !(source->player->ctfteam == player->ctfteam && source != player->mo))
+		{
 			P_AddPlayerScore(source->player, 50);
+			if (!issimulation)
+			{
+				P_AddPlayerHitCount(source->player);
+				P_AddPlayerTimesHitCount(player);
+			}
+		}
 	}
 
 	if ((gametyperules & GTR_TEAMFLAGS) && (player->gotflag & (GF_REDFLAG|GF_BLUEFLAG)))
