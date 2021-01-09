@@ -531,6 +531,14 @@ typedef struct player_s
 #endif
 } player_t;
 
+typedef struct playermatchstats_s
+{
+	UINT8 hits;
+	UINT8 timeshit;
+	UINT8 kills;
+	UINT8 deaths;
+} playermatchstats_t;
+
 // Values for dashmode
 #define DASHMODE_THRESHOLD (3*TICRATE)
 #define DASHMODE_MAX (DASHMODE_THRESHOLD + 3)

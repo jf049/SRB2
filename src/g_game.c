@@ -110,6 +110,7 @@ boolean multiplayer;
 boolean playeringame[MAXPLAYERS];
 boolean addedtogame;
 player_t players[MAXPLAYERS];
+playermatchstats_t playermatchstats[MAXPLAYERS];
 
 INT32 consoleplayer; // player taking events and displaying
 INT32 displayplayer; // view being displayed
@@ -119,7 +120,8 @@ tic_t simtic; // simulated tic
 tic_t targetsimtic; // target simulated tic
 tic_t smoothedTic;
 boolean canSimulate;
-tic_t lastsimtic;	
+tic_t lastsimtic;
+// boolean canPlaySounds;
 
 tic_t gametic;
 tic_t neededtic;

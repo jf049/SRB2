@@ -76,6 +76,7 @@ extern consvar_t cv_scrambleonchange;
 
 extern consvar_t cv_netstat;
 extern consvar_t cv_netsimstat;
+extern consvar_t cv_hitcounters;
 #ifdef WALLSPLATS
 extern consvar_t cv_splats;
 #endif
@@ -125,6 +126,7 @@ extern consvar_t cv_nettrails;
 extern consvar_t cv_netslingdelay;
 extern consvar_t cv_netvariabletime;
 
+extern consvar_t cv_powerupmusic;
 
 extern consvar_t cv_skipmapcheck;
 

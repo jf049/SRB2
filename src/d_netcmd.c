@@ -342,6 +342,7 @@ consvar_t cv_allowexitlevel = {"allowexitlevel", "No", CV_NETVAR, CV_YesNo, NULL
 
 consvar_t cv_killingdead = {"killingdead", "Off", CV_NETVAR, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
 
+consvar_t cv_hitcounters = {"hitcounters", "Yes", 0, CV_YesNo, NULL, 0, NULL, NULL, 0, 0, NULL};
 
 consvar_t cv_netsimstat = { "netsimstat", "Off", 0, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL }; //srb2netplus, shows simulation stats
 consvar_t cv_netstat = {"netstat", "Off", 0, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL}; // show bandwidth statistics
@@ -386,6 +387,9 @@ consvar_t cv_sleep = {"cpusleep", "1", CV_SAVE, sleeping_cons_t, NULL, -1, NULL,
 
 consvar_t cv_simulate = { "sim", "Yes", 0, CV_YesNo, NULL, 0, NULL, NULL, 0, 0, NULL };
 
+consvar_t cv_powerupmusic = { "powerupmusic", "Yes", 0, CV_YesNo, NULL, 0, NULL, NULL, 0, 0, NULL };
+
+
 static CV_PossibleValue_t simulateTics_cons_t[] = { {0, "MIN"}, {MAXSIMULATIONS - 1, "MAX"}, {0, NULL} };
 consvar_t cv_simulatetics = { "simtics", "MAX", 0, simulateTics_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL };
 
@@ -398,7 +402,7 @@ consvar_t cv_siminaccuracy = { "siminaccuracy", "MIN", 0, siminaccuracy_cons_t, 
 static CV_PossibleValue_t netsteadyplayers_cons_t[] = { {0, "MIN"}, {MAXSIMULATIONS - 1, "MAX"}, {0, NULL} };
 consvar_t cv_netsteadyplayers = { "simsteadyplayers", "0", 0, netsteadyplayers_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL };
 
-static CV_PossibleValue_t nettrails_cons_t[] = { {0, "MIN"}, {5, "MAX"}, {0, NULL} };
+static CV_PossibleValue_t nettrails_cons_t[] = { {0, "MIN"}, {10, "MAX"}, {0, NULL} };
 consvar_t cv_nettrails = { "simtrails", "5", 0, nettrails_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL };
 
 consvar_t cv_netslingdelay = { "simslingdelay", "No", 0, CV_YesNo, NULL, 0, NULL, NULL, 0, 0, NULL };
@@ -565,6 +569,8 @@ void D_RegisterServerCommands(void)
 	CV_RegisterVar(&cv_netvariabletime);
 
 	COM_AddCommand("downloads", Command_Downloads_f);
+
+	CV_RegisterVar(&cv_powerupmusic);
 
 	// for master server connection
 	AddMServCommands();
@@ -835,6 +841,7 @@ void D_RegisterClientCommands(void)
 	CV_RegisterVar(&cv_netstat);
 	CV_RegisterVar(&cv_netticbuffer);
 	CV_RegisterVar(&cv_netsimstat);
+	CV_RegisterVar(&cv_hitcounters);
 
 #ifdef NETGAME_DEVMODE
 	CV_RegisterVar(&cv_fishcake);
@@ -2193,7 +2200,7 @@ static void Got_Mapcmd(UINT8 **cp, INT32 playernum)
 	ultimatemode = ((flags & 1) != 0);
 	if (netgame || multiplayer)
 		ultimatemode = false;
-
+	P_ClearMatchStatsForPlayers();
 	resetplayer = ((flags & (1<<1)) == 0);
 
 	lastgametype = gametype;

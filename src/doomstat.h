@@ -632,6 +632,7 @@ extern tic_t simtic; // current tic at simulation, if applicable (if no simulati
 extern tic_t targetsimtic; // the target sim tic, if applicable
 extern tic_t smoothedTic; // current game tic when smoothing is enabled (\todo: could cause problems if the game objects care about gametic)
 extern boolean canSimulate;
+// extern boolean canPlaySounds;
 extern tic_t lastsimtic;	
 #define localgametic leveltime
 

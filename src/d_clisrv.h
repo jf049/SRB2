@@ -49,6 +49,7 @@ applications may follow different packet versions.
 
 // Maximum number of client-side simulations allowed. A simulation is a version of the game state extrapolated some frames ahead to cancel out network latency
 #define MAXSIMULATIONS TICRATE //one second of simulations
+#define MAXLOCALSAVESTATES 4
 // #define MAXSIMULATIONS 35
 
 //
